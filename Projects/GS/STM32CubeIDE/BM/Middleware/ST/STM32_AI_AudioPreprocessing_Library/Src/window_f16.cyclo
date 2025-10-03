@@ -1,0 +1,2 @@
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/window_f16.c:48:9:Window_f16_Init	5
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/window_f16.c:76:6:cosine_sum_window_create_f16	2

@@ -1,0 +1,8 @@
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Common/cpu_stats.c:39:6:time_stats_init	16	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Common/cpu_stats.c:49:6:time_stats_reset	16	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Common/cpu_stats.c:56:6:time_stats_store	16	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Common/cpu_stats.c:72:7:time_stats_get_avg	16	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Common/cpu_stats.c:76:7:time_stats_get_min	16	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Common/cpu_stats.c:80:7:time_stats_get_max	16	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Common/cpu_stats.c:84:7:time_stats_get_latest	16	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Common/cpu_stats.c:88:14:time_stats_get_cnt	16	static

@@ -1,0 +1,4 @@
+../../../../Drivers/CMSIS/Core/Include/pmu_armv8.h:224:22:ARM_PMU_CYCCNT_Reset	1
+../../../../Drivers/CMSIS/Core/Include/pmu_armv8.h:265:26:ARM_PMU_Get_CCNTR	1
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Dpu/preproc_dpu.c:33:5:PreProc_DPUInit_f16	1
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Dpu/preproc_dpu.c:120:5:PreProc_DPU_f16	6

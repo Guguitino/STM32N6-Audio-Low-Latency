@@ -1,0 +1,7 @@
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/AudioCapture_ring_buff.c:59:20:atomic_add	2
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/AudioCapture_ring_buff.c:70:6:AudioCapture_ring_buff_reset	1
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/AudioCapture_ring_buff.c:81:6:AudioCapture_ring_buff_alloc	2
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/AudioCapture_ring_buff.c:97:6:AudioCapture_ring_buff_free	1
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/AudioCapture_ring_buff.c:108:10:AudioCapture_ring_buff_consume_no_cpy	2
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/AudioCapture_ring_buff.c:123:10:AudioCapture_ring_buff_consume	3
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/AudioCapture_ring_buff.c:175:6:AudioCapture_ring_buff_feed	5

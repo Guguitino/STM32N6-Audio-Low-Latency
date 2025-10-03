@@ -1,0 +1,9 @@
+../../../../Drivers/CMSIS/Core/Include/pmu_armv8.h:265:26:ARM_PMU_Get_CCNTR	1
+../../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_NN_interface.h:479:32:LL_Buffer_addr_base	2
+../../../../Middlewares/ST/AI/Npu/ll_aton/ll_aton_NN_interface.h:489:32:LL_Buffer_addr_start	1
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Dpu/ai_dpu.c:37:13:extract_ll_buffer_shape	4
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Dpu/ai_dpu.c:53:12:AiDPUCheckModel	19
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Dpu/ai_dpu.c:109:13:print_ll_io_buffer	4
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Dpu/ai_dpu.c:136:6:AiDPULoadModel	5
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Dpu/ai_dpu.c:175:5:AiDPUReleaseModel	1
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/Dpu/ai_dpu.c:180:5:AiDPUProcess	2

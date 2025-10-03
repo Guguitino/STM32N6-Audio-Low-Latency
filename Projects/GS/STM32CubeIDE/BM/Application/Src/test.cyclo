@@ -1,0 +1,4 @@
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/test.c:49:6:test_init	1
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/test.c:56:6:test_probe_in	1
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/test.c:81:6:test_probe_out	1
+/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Projects/GS/Src/test.c:107:6:test_dump	1
