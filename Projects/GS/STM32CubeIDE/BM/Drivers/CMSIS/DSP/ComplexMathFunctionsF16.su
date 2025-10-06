@@ -1,6 +1,0 @@
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Drivers/CMSIS/DSP/Source/ComplexMathFunctions/arm_cmplx_conj_f16.c:74:6:arm_cmplx_conj_f16	176	static
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Drivers/CMSIS/DSP/Source/ComplexMathFunctions/arm_cmplx_dot_prod_f16.c:84:6:arm_cmplx_dot_prod_f16	1704	static
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Drivers/CMSIS/DSP/Source/ComplexMathFunctions/arm_cmplx_mag_f16.c:78:6:arm_cmplx_mag_f16	2448	static
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Drivers/CMSIS/DSP/Source/ComplexMathFunctions/arm_cmplx_mag_squared_f16.c:76:6:arm_cmplx_mag_squared_f16	376	static,ignoring_inline_asm
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Drivers/CMSIS/DSP/Source/ComplexMathFunctions/arm_cmplx_mult_cmplx_f16.c:75:6:arm_cmplx_mult_cmplx_f16	1536	static,ignoring_inline_asm
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Drivers/CMSIS/DSP/Source/ComplexMathFunctions/arm_cmplx_mult_real_f16.c:76:6:arm_cmplx_mult_real_f16	360	static

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-pathCubeIde="<PathtoCube IDE>/STM32CubeIDE"
-project="file://<Path_to_Project>/GS_Audio_N6/Projects/GS/STM32CubeIDE"
+pathCubeIde="/home/adamg/STM32Cube/stm32cubeide-1.19.0/"
+project="file:///home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/Projects/GS/STM32CubeIDE"
 
-conf=$1 # BM or BM_LP or FREERTOS or FREERTOS_LP
+conf="BM" # BM or BM_LP or FREERTOS or FREERTOS_LP
 
 buildconf="GS_Audio_N6/"$conf
-cubeIDE=$pathCubeIde/stm32cubeidec.exe
+cubeIDE=$pathCubeIde/stm32cubeide
 app="org.eclipse.cdt.managedbuilder.core.headlessbuild"
 tmpDir="/C/ST/Temp/cubeIDE_WS"
 rm -Rf $tmpDir

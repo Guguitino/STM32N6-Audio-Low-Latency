@@ -10,5 +10,5 @@ fi
 
 python GenHeader/GenHeaders.py $arg
 
-cp -r ./GenHeaderOutput/C_Header/*.* ../../Dpu
+cp -r GenHeaderOutput/C_header/* ../../Dpu
 rm -rf ./GenHeaderOutput

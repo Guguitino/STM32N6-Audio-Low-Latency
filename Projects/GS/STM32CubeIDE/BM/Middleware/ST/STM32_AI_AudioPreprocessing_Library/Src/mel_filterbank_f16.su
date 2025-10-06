@@ -1,4 +1,0 @@
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/mel_filterbank_f16.c:62:6:MelFilterbank_f16_Init	144	static
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/mel_filterbank_f16.c:214:6:MelFilterbank_f16	48	static
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/mel_filterbank_f16.c:235:27:MelScale_f16	40	static
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/mel_filterbank_f16.c:265:27:InverseMelScale_f16	40	static

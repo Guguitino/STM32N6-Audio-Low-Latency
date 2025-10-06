@@ -148,7 +148,7 @@ void init_bm(void)
   AudioProcIsOn = true;
 }
 
-bool audio_process_test(AudioBM_acq_t * acq_ctx_ptr, AudioBM_play_back_t * llplayback_ctx_ptr, uint32_t audio_acq_len)
+bool audio_process_low_latency(AudioBM_acq_t * acq_ctx_ptr, AudioBM_play_back_t * llplayback_ctx_ptr, uint32_t audio_acq_len)
 {
 	if (audio_acq_len > LLPLAYBACK_BUFFER_SIZE)
 	    audio_acq_len = LLPLAYBACK_BUFFER_SIZE;
@@ -242,7 +242,7 @@ void exec_bm(void)
 		}
 		else
 		{
-			cont = audio_process_test(&audio_acq_ctx, &audio_llplayback_ctx, audio_acq_len);
+			cont = audio_process_low_latency(&audio_acq_ctx, &audio_llplayback_ctx, audio_acq_len);
 		}
 #ifdef CPU_STATS
         printCpuStats();
@@ -726,14 +726,16 @@ void BSP_PB_Callback(Button_TypeDef Button)
 {
   if (BUTTON_USER1 == Button)
   {
-    toggle_audio_proc();
-    audio_llplayback_ctx.cnt = 0;
+
+  audio_llplayback_ctx.cnt = 0;
 	audio_proc_ctx.audioPlayBackCtx.cnt = 0;
 
-	BSP_AUDIO_IN_Stop(0);
-	stopAudioPlayBack();
-	AudioCapture_ring_buff_consume_no_cpy(&audio_acq_ctx, PLAYBACK_BUFFER_SIZE/2);
+	BSP_AUDIO_OUT_Stop(0);
+	BSP_AUDIO_OUT_Stop(1);
+	AudioCapture_ring_buff_consume_no_cpy(&audio_llplayback_ctx.ring_buff, LLPLAYBACK_BUFFER_SIZE/2);
+	AudioCapture_ring_buff_consume_no_cpy(&audio_proc_ctx.audioPlayBackCtx.ring_buff, PLAYBACK_BUFFER_SIZE/2);
 
+	toggle_audio_proc();
   }
 }
 #endif
@@ -797,7 +799,6 @@ static void AudioPlayBack(AudioBM_play_back_t *ctx_ptr, int16_t *pData, \
   if (ctx_ptr->cnt== 1) 
   {
     /* Start the playback */
-	  printf("BSP_AUDIO_OUT_Play size_bytes=%u\n", size_in_bytes);
 	uint32_t bsp_error = BSP_AUDIO_OUT_Play(0, ctx_ptr->ring_buff.pData, ring_buffer_size * sizeof(int16_t));
     if (BSP_ERROR_NONE != bsp_error)
     {
