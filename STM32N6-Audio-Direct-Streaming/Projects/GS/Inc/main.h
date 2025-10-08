@@ -28,6 +28,7 @@
 #include "stm32n6570_discovery_xspi.h"
 #include "stm32n6570_discovery_audio.h"
 #include "app_config.h"
+#include "ai_model_config.h"
 #include "system_clock_config.h"
 #include "AudioCapture_ring_buff.h"
 #include "tasks_def.h"

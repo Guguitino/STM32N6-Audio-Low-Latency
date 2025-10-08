@@ -121,6 +121,48 @@ void init_bm(void)
   AudioProcIsOn = true;
 }
 
+bool audio_process_low_latency(AudioBM_acq_t * acq_ctx_ptr, AudioBM_play_back_t * llplayback_ctx_ptr, uint32_t audio_acq_len)
+{
+	if (audio_acq_len > LLPLAYBACK_BUFFER_SIZE)
+	    audio_acq_len = LLPLAYBACK_BUFFER_SIZE;
+
+	uint32_t idxMax = llplayback_ctx_ptr->ring_buff.nbSamples * llplayback_ctx_ptr->ring_buff.nbFrames;
+
+    uint32_t latency_target_samples = audio_acq_len;
+    // --- Contrôle de la latence ---
+    if (llplayback_ctx_ptr->ring_buff.availableSamples > latency_target_samples)
+    {
+        // Trop de backlog → on saute en resynchronisant
+        int32_t newRead = (int32_t)llplayback_ctx_ptr->ring_buff.writeSampleIndex
+                          - (int32_t)latency_target_samples;
+
+        if (newRead < 0) newRead += idxMax;
+
+        llplayback_ctx_ptr->ring_buff.readSampleIndex  = (uint32_t)newRead;
+        llplayback_ctx_ptr->ring_buff.availableSamples = latency_target_samples;
+    }
+
+    // --- Acquisition d’un bloc ---
+    AudioCapture_ring_buff_consume(llacq_buf, &acq_ctx_ptr->ring_buff, audio_acq_len);
+
+    // --- Playback direct ---
+    AudioPlayBack(llplayback_ctx_ptr, (int16_t *)llacq_buf, audio_acq_len, LLPLAYBACK_BUFFER_SIZE);
+
+    ringBuffStatsBuf[0].bufferSize = acq_ctx_ptr->ring_buff.nbSamples * acq_ctx_ptr->ring_buff.nbFrames;
+	ringBuffStatsBuf[0].availableSamples = acq_ctx_ptr->ring_buff.availableSamples;
+	ringBuffStatsBuf[0].readSampleIndex = acq_ctx_ptr->ring_buff.readSampleIndex;
+	ringBuffStatsBuf[0].writeSampleIndex = acq_ctx_ptr->ring_buff.writeSampleIndex;
+
+	ringBuffStatsBuf[1].bufferSize = llplayback_ctx_ptr->ring_buff.nbSamples * llplayback_ctx_ptr->ring_buff.nbFrames;
+	ringBuffStatsBuf[1].availableSamples = llplayback_ctx_ptr->ring_buff.availableSamples;
+	ringBuffStatsBuf[1].readSampleIndex = llplayback_ctx_ptr->ring_buff.readSampleIndex;
+	ringBuffStatsBuf[1].writeSampleIndex = llplayback_ctx_ptr->ring_buff.writeSampleIndex;
+
+    BSP_LED_Toggle(LED_GREEN);  // petit indicateur visuel
+
+    return true;
+}
+
 #ifdef APP_BARE_METAL
 /**
   * @brief  main loop for bare metal implementation.
@@ -144,6 +186,33 @@ void exec_bm(void)
      if (audio_acq_ctx.ring_buff.availableSamples >= AUDIO_ACQ_LEN)
      {
         cont = audio_process(&audio_acq_ctx,&audio_proc_ctx);
+#ifdef  APP_LP
+    HAL_SuspendTick();
+    HAL_PWR_EnterSLEEPMode(0, PWR_SLEEPENTRY_WFI);
+    HAL_ResumeTick();
+#endif /* APP_LP */
+
+
+    uint32_t audio_acq_len;
+	if(AudioProcIsOn)
+	{
+		audio_acq_len = AUDIO_ACQ_LEN;
+	}
+	else
+	{
+		audio_acq_len = LLPLAYBACK_BUFFER_SIZE/4;
+	}
+    uint32_t availableSamples = audio_acq_ctx.ring_buff.availableSamples;
+    if (availableSamples >= audio_acq_len)
+    {
+    	if(AudioProcIsOn)
+		{
+    		cont = audio_process(&audio_acq_ctx,&audio_proc_ctx, audio_acq_len);
+		}
+		else
+		{
+			cont = audio_process_low_latency(&audio_acq_ctx, &audio_llplayback_ctx, audio_acq_len);
+		}
 #ifdef CPU_STATS
         printCpuStats();
 #endif
@@ -563,6 +632,16 @@ void BSP_PB_Callback(Button_TypeDef Button)
   if (BUTTON_USER1 == Button)
   {
     toggle_audio_proc();
+
+  audio_llplayback_ctx.cnt = 0;
+	audio_proc_ctx.audioPlayBackCtx.cnt = 0;
+
+	BSP_AUDIO_OUT_Stop(0);
+	BSP_AUDIO_OUT_Stop(1);
+	AudioCapture_ring_buff_consume_no_cpy(&audio_llplayback_ctx.ring_buff, LLPLAYBACK_BUFFER_SIZE/2);
+	AudioCapture_ring_buff_consume_no_cpy(&audio_proc_ctx.audioPlayBackCtx.ring_buff, PLAYBACK_BUFFER_SIZE/2);
+
+	toggle_audio_proc();
   }
 }
 #endif
@@ -618,6 +697,8 @@ static void AudioPlayBack(AudioBM_play_back_t *ctx_ptr, int16_t *pData,\
     /* Start the playback */
     if (BSP_ERROR_NONE != BSP_AUDIO_OUT_Play(0, ctx_ptr->ring_buff.pData, \
       PLAYBACK_BUFFER_SIZE * sizeof(int16_t)))
+	uint32_t bsp_error = BSP_AUDIO_OUT_Play(0, ctx_ptr->ring_buff.pData, ring_buffer_size * sizeof(int16_t));
+    if (BSP_ERROR_NONE != bsp_error)
     {
       Error_Handler();
     }

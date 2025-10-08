@@ -1,11 +1,11 @@
 #!\bin\bash
 
-pathCubeIde="<PathtoCube IDE>"
-pathProg="/plugins/<cube programmer plug-in>/tools/bin"
+pathCubeIde="/home/adamg/STM32Cube/stm32cubeide-1.19.0"
+pathProg="/plugins/com.st.stm32cube.ide.mcu.externaltools.cubeprogrammer.linux64_2.2.200.202503041107/tools/bin"
 
 el=$pathCubeIde$pathProg"/ExternalLoader/MX66UW1G45G_STM32N6570-DK.stldr"
-prog=$pathCubeIde$pathProg"/STM32_Programmer_CLI.exe"
-sign=$pathCubeIde$pathProg"/STM32_SigningTool_CLI.exe"
+prog=$pathCubeIde$pathProg"/STM32_Programmer_CLI"
+sign=$pathCubeIde$pathProg"/STM32_SigningTool_CLI"
 
 bin="../../GS/STM32CubeIDE/"$1"/GS_Audio_N6.bin"
 fsbl="../../../Binaries/fsbl_fw_lrun_v1.2.0.bin"

@@ -1,3 +1,4 @@
 **/BM/
 .project
-**/.metadata/
+.vscode
+.metadata/
