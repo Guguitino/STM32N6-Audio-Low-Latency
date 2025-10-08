@@ -1,3 +1,0 @@
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/audio_prePost_process_f16.c:32:6:audio_is16oCplxFFTf16	56	static
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/audio_prePost_process_f16.c:109:6:audio_iCplxFFTf16oFFTx	112	static,ignoring_inline_asm
-/home/adamg/STApps/GS_Audio_N6/STM32N6-GettingStarted-Audio-main/Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/audio_prePost_process_f16.c:246:6:audio_iCplxFFTf16xf16os16	128	static,ignoring_inline_asm

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item key="hasShownOverlayPopupBefore" value="true"/>
+	<item key="replaceBarOpen" value="false"/>
+	<list key="searchhistory">
+		<item value="hdmatx"/>
+		<item value="hdmatx-&gt;XferHalfCpltCallback"/>
+		<item value="XferHalfCpltCallback"/>
+		<item value="SAI_DMATxHalfCplt"/>
+		<item value="HAL_SAI_TxHalfCpltCallback"/>
+		<item value="HAL_SAI_Transmit_DMA"/>
+		<item value="SAI_Transmit_IT16Bit"/>
+		<item value="HAL_SAI_TxCpltCallback"/>
+		<item value="BSP_AUDIO_OUT"/>
+		<item value="current_playback_half_buffer_to_copy_to"/>
+		<item value="audio_acq_ctx"/>
+	</list>
+</section>
