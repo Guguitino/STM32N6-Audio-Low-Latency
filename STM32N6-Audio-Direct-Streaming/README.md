@@ -9,13 +9,10 @@ Les fonctions de callback utilisés sont les suivantes (`audio_bm.c`) :
 - `BSP_AUDIO_OUT_TransferComplete_CallBack`
 - `BSP_AUDIO_OUT_HalfTransfer_CallBack`
 
-Les buffers utilisés sont **capture_buffer** pour l'acquisition et **playback_buffer** pour la sortie. Ils ont chacun une taille définie par **CAPTURE_BUFFER_SIZE** dans le fichier **stm32n6570_discovery_conf.h**.
+Les buffers utilisés sont **capture_buffer** pour l'acquisition et **playback_buffer** pour la sortie. Ils ont chacun une taille définie par **BUFFER_SIZE**. Le codex limite la taille du buffer d'entrée à 128 échantillons.
 
-Pour une taille de buffer inférieur à environ 500 ms, aucun son n'est obtenu en sortie. Pour une taille de buffer plus grande, on peut entendre le son capté en entrée. Le son obtenu est très bruité et avec un fort délai.
+Le son est cependant dégradé, une solution est d'utiliser le même buffer pour l'acquisition et le playback. Pour cela, il suffit d'appeler 
 
 # TODO
-
-- Supprimer le code non utilisé
-- Pourquoi du son pour seulement des petits buffers ? (Double buffering ?)
+- Pourquoi la fonction SCB_EnableDCache() casse tout ?
 - Pourquoi le signal est bruité ?
-- Vérifier que le délai correspond à la taille de buffer

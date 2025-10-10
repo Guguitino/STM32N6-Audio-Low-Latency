@@ -24,18 +24,11 @@
 #include "main.h"
 #include "audio_bm.h"
 
-#ifndef APP_BARE_METAL
-#include "audio_freertos.h"
-#endif
-
 int main(void)
 {
   init_bm();
-#ifdef APP_BARE_METAL
+
   exec_bm();
-#else
-  main_freertos();
-#endif
 }
 
 #ifdef  USE_FULL_ASSERT

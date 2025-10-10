@@ -53,7 +53,7 @@ extern "C" {
 #define TS_TOUCH_NBR                        2U
 /* from main*/
 #define AUDIO_FREQUENCY                    AUDIO_FREQUENCY_16K
-#define CAPTURE_BUFFER_SIZE                (AUDIO_FREQUENCY*500U/1000U) /* 20 ms */
+#define CAPTURE_BUFFER_SIZE                (128) //(AUDIO_FREQUENCY*20U/1000U) /* 20 ms */
 
 /* LCD defines */
 /* The values provided as example below point at SRAM1 area and allow

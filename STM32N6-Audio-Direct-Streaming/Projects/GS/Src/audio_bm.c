@@ -25,21 +25,10 @@
 #include "app_config.h"
 #include "system_clock_config.h"
 #include "misc_toolbox.h"
-#include "cpu_stats.h"
-#include "AudioCapture_ring_buff.h"
-#include "preproc_dpu.h"                           /* Preprocessing includes  */
-#include "postproc_dpu.h"                          /* Postprocessing includes */
-#include "ai_dpu.h"                                /* AI includes             */
-#include "test.h"
+//#include "test.h"
 #include "audio_bm.h"
 
 /* Private define ------------------------------------------------------------*/
-#define AUDIO_ACQ_LEN     (CTRL_X_CUBE_AI_ACQ_LENGTH)
-#if (CTRL_X_CUBE_AI_SPECTROGRAM_COL_OVL > 0)
-#define AUDIO_ACQ_OFFSET  ((CTRL_X_CUBE_AI_SPECTROGRAM_COL_OVL*2 -1)*CTRL_X_CUBE_AI_SPECTROGRAM_HOP_LENGTH+CTRL_X_CUBE_AI_SPECTROGRAM_WINDOW_LENGTH)
-#endif
-#define AUDIO_OUT_FIRST   (CTRL_X_CUBE_AI_SPECTROGRAM_COL_OVL*CTRL_X_CUBE_AI_SPECTROGRAM_HOP_LENGTH)
-
 /* Private function prototypes -----------------------------------------------*/
 static void IAC_Config(void);
 static void MPU_Config(void);
@@ -48,35 +37,15 @@ static void Int_Mem_Config(void);
 static void SleepClks_init(void);
 static void Error_Handler(void);
 static void Record_Init(void);
-static void NPU_SettingsLog(void);
 
-#ifdef CPU_STATS
-static void printCpuStats(void);
-#endif
-
-#if (CTRL_X_CUBE_AI_AUDIO_OUT==COM_TYPE_HEADSET)
 static void initAudioPlayBack(void);
-static void AudioPlayBack(AudioBM_play_back_t *ctx_ptr, int16_t *pData, \
-                                                uint16_t nbSamples);
-static float vumeter(int16_t * pAudioSmp,int nb_sample);
-#endif
 
 /* Private variables ---------------------------------------------------------*/
-static bool AudioProcIsOn;
-
-#ifdef APP_BARE_METAL
-static AudioBM_acq_t  audio_acq_ctx;
-static AudioBM_proc_t audio_proc_ctx;
-
-static int16_t capture_buffer[CAPTURE_BUFFER_SIZE];
-static int16_t playback_buffer[CAPTURE_BUFFER_SIZE];
+#define BUFFER_SIZE (256)
+static int16_t capture_buffer[BUFFER_SIZE];
+static int16_t playback_buffer[BUFFER_SIZE];
 static int32_t current_playback_half_buffer_to_copy_to;
 static int32_t first_half_transfert_callback_flag;
-
-#endif
-#if (CTRL_X_CUBE_AI_AUDIO_OUT==COM_TYPE_HEADSET)
-int16_t  playback_buf[PLAYBACK_BUFFER_SIZE] __NON_CACHEABLE;
-#endif
 
 /**
   * @brief  Initializes the system according to the application
@@ -97,19 +66,15 @@ void init_bm(void)
 
   SystemClock_Config_Full();
 
-  /* Force fusing of the OTP when using a Nucleo/DK board only */
-#if (defined(USE_STM32N6xx_NUCLEO) || defined(USE_STM32N6570_DK))
   fuse_vddio();
-#endif
 
   MPU_Config();
   Int_Mem_Config();
   Ext_Mem_Config();
-  NPU_Config();
+
   IAC_Config();
   SCB_EnableICache();
-  SCB_EnableDCache();
-  SleepClks_init(); /* configures for sleep */
+  //SCB_EnableDCache(); // /!\ Cette fonction casse tout /!\
 
   /* BSP inits */
   UART_Config();
@@ -117,15 +82,8 @@ void init_bm(void)
   BSP_PB_Init(BUTTON_TAMP, BUTTON_MODE_EXTI);
   BSP_LED_Init(LED_GREEN);
   BSP_LED_Init(LED_RED);
-
-  /* configuration information on console */
-  displaySystemSetting();
-
-  /* by default processing is active */
-  AudioProcIsOn = true;
 }
 
-#ifdef APP_BARE_METAL
 /**
   * @brief  main loop for bare metal implementation.
   * @param  None
@@ -174,91 +132,15 @@ void exec_bm(void)
   }
   stopAudioCapture();
 
-#if (CTRL_X_CUBE_AI_AUDIO_OUT==COM_TYPE_HEADSET)
   stopAudioPlayBack();
-#endif
 
   test_dump();
   my_printf("\n\r# End Processing\n\r");
 }
-#endif
-/**
- * @brief  Initializes all Audio processing
- * @param  proc_ctx_ptr pointer to processing context
- * @retval None
- */
-void initAudioProc(AudioBM_proc_t * ctx_ptr)
-{
-  struct npu_model_info *pxInfo;
-  /* init test facilities */
-  test_init();
-  /* get the AI model */
-  AiDPULoadModel( &ctx_ptr->aiCtx, CTRL_X_CUBE_AI_MODEL_NAME );
-  pxInfo     = &ctx_ptr->aiCtx.net_exec_ctx->info;
-  ctx_ptr->ai_in_ptr = (int8_t *) LL_Buffer_addr_start(pxInfo->in_bufs[0]);
-  ctx_ptr->ai_out_ptr = pxInfo->out_bufs[0] ;
-  /* clear input samples array ( get silence on first overlayed patch */
-  memset(ctx_ptr->proc_buff,0,PATCH_LENGTH*sizeof(int16_t));
-  /* Audio Preprocessing init */
-  PreProc_DPUInit(&ctx_ptr->audioPreCtx);
-  /* Audio Postprocessing init */
-  PostProc_DPUInit(&ctx_ptr->audioPostCtx);
-  /* transfer quantization parametres included in AI model to the Audio DPU   */
-  ctx_ptr->audioPreCtx.output_Q_offset    = ctx_ptr->aiCtx.input_Q_offset;
-  ctx_ptr->audioPreCtx.output_Q_inv_scale =
-            (PREPROC_FLOAT_T) ctx_ptr->aiCtx.input_Q_inv_scale;
-  ctx_ptr->audioPreCtx.quant.output_Q_inv_scale = ctx_ptr->audioPreCtx.output_Q_inv_scale;
-  ctx_ptr->audioPreCtx.quant.output_Q_offset = ctx_ptr->audioPreCtx.output_Q_offset;
-  ctx_ptr->cnt = 0;
-}
-
-/**
-  * @brief  audio processing - pre, main, and post
-  * @param  acq_ctx_ptr pointer to acquisition context
-  * @param  proc_ctx_ptr pointer to processing context
-  * @retval true if continue condition is met
-  */
-bool audio_process(AudioBM_acq_t * acq_ctx_ptr,AudioBM_proc_t * proc_ctx_ptr)
-{
-
-  uint8_t *proc_buf = (uint8_t *) proc_ctx_ptr->proc_buff;
-  uint8_t *proc_buf_ovl = (uint8_t *) (&proc_ctx_ptr->proc_buff[AUDIO_ACQ_LEN]);
-  uint8_t *acq_buf = (uint8_t *) (&proc_ctx_ptr->proc_buff[AUDIO_ACQ_OFFSET]);
-  bool cont = true;
-
-  /* prepare overlapping samples from previous patch */
-  memcpy(proc_buf,proc_buf_ovl,AUDIO_ACQ_OFFSET*sizeof(int16_t));
-
-  /* Audio samples acquisition */
-  AudioCapture_ring_buff_consume(acq_buf,&acq_ctx_ptr->ring_buff,AUDIO_ACQ_LEN);
-
-  /* Audio pre processing */
-  PreProc_DPU(&proc_ctx_ptr->audioPreCtx, proc_buf, proc_ctx_ptr->ai_in_ptr );
-
-  /* AI processing */
-  AiDPUProcess(&proc_ctx_ptr->aiCtx);
-
-#if (CTRL_X_CUBE_AI_POSTPROC==CTRL_AI_ISTFT)
-  PostProc_DPU(&proc_ctx_ptr->audioPostCtx,
-      proc_ctx_ptr->audioPreCtx.pCplxSpectrum,
-      (float32_t *) LL_Buffer_addr_start(proc_ctx_ptr->ai_out_ptr),
-      proc_ctx_ptr->audio_out);
-#endif
-
-#if (CTRL_X_CUBE_AI_AUDIO_OUT==COM_TYPE_HEADSET)
-  int16_t * audioPtr = (AudioProcIsOn) ?
-      &proc_ctx_ptr->audio_out[AUDIO_OUT_FIRST] : (int16_t *)acq_buf ;
-  AudioPlayBack(&proc_ctx_ptr->audioPlayBackCtx, audioPtr , AUDIO_ACQ_LEN);
-#endif
-
-  BSP_LED_Toggle(LED_GREEN);
-  
-  return cont;
-}
 
 /**
 * @brief  Initializes Audio capture from microphone
-* @param  acq_ctx_ptr pointer to acquisition context
+* @param  None
 * @retval None
 */
 void initAudioCapture(void)
@@ -269,14 +151,14 @@ void initAudioCapture(void)
 
 /**
 * @brief  Starts Audio capture from microphone
-* @param  acq_ctx_ptr pointer to acquisition context
+* @param  capture_buffer pointer to acquisition buffer
 * @retval None
 */
 void startAudioCapture(int16_t *capture_buffer)
 {
   /* Start record */
   if (BSP_ERROR_NONE != BSP_AUDIO_IN_Record(1, (uint8_t *) capture_buffer,
-                                         CAPTURE_BUFFER_SIZE * sizeof(int16_t)))
+                                         BUFFER_SIZE * sizeof(int16_t)))
   {
     Error_Handler();
   }
@@ -284,7 +166,6 @@ void startAudioCapture(int16_t *capture_buffer)
   first_half_transfert_callback_flag = 1;
 }
 
-#if (CTRL_X_CUBE_AI_AUDIO_OUT==COM_TYPE_HEADSET)
 /**
 * @brief  Stops Audio Playback
 * @param  None
@@ -294,7 +175,6 @@ void stopAudioPlayBack(void)
 {
   BSP_AUDIO_OUT_Stop(1);
 }
-#endif
 
 /**
 * @brief  Stops Audio Capture
@@ -306,69 +186,6 @@ void stopAudioCapture(void)
   BSP_AUDIO_IN_Stop(1);
 }
 
-void printHeader(void)
-{
-	my_printf(SEPARATION_LINE);
-	my_printf("# Start Processing\n\r");
-	my_printf(SEPARATION_LINE);
-
-#if (CTRL_X_CUBE_AI_AUDIO_OUT==COM_TYPE_HEADSET)
-	my_printf("| Vu meter          ");
-#endif
-	my_printf("| Frame   |  Cpu  |  Pre |  AI  | Post |");
-	my_printf("\r\n");
-}
-
-void printCpuStats(void)
-{
-	/* display real time statistics */
-	float pre_load = 100 * time_stats_get_avg(TIME_STAT_PRE_PROC)/CTRL_X_CUBE_AI_ACQ_LENGTH_MS;
-	float ai_load = 100 * time_stats_get_avg(TIME_STAT_AI_PROC)/CTRL_X_CUBE_AI_ACQ_LENGTH_MS;
-	float post_load = 100 * time_stats_get_avg(TIME_STAT_POST_PROC)/CTRL_X_CUBE_AI_ACQ_LENGTH_MS;
-#if (CTRL_X_CUBE_AI_AUDIO_OUT!=COM_TYPE_HEADSET)
-	my_printf("                    ");
-#endif
-	printf ("| %-8d|%6.2f%%|%6.2f|%6.2f|%6.2f|\r",time_stats_get_cnt(TIME_STAT_AI_PROC),pre_load+ai_load+post_load,pre_load, ai_load, post_load);
-	fflush(stdout);
-}
-
-/**
-* @brief  Displays System Settings
-* @param  None
-* @retval None
-*/
-void displaySystemSetting(void)
-{
-  my_printf("\n\r");
-  my_printf(SEPARATION_LINE);
-  my_printf("        System configuration (%s)\n\r",APP_CONF_STR);
-  my_printf(SEPARATION_LINE);
-  printf("\n\rLog Level: %s\n\n\r", getLogLevelStr(LOG_LEVEL));
-  systemSettingLog();
-  NPU_SettingsLog();
-}
-
-/*void toggle_audio_proc(void)
-{
-  BSP_LED_Toggle(LED_RED);
-  AudioProcIsOn = !AudioProcIsOn;
-}*/
-
-
-/**
-* @brief  Manages the BSP audio half transfer.
-* @param  pHdle pointer to audio ring buffer handle
-* @param  pData pointer to audio acquired samples buffer
-* @param  half_buf id ( 0 or 1 )
-* @retval None.
-*/
-void AudioCapture_half_buf_cb(AudioCapture_ring_buff_t *pHdle, int16_t *pData, uint8_t half_buf)
-{
-  int16_t *in_p = pData + half_buf * (CAPTURE_BUFFER_SIZE/ 2);
-  AudioCapture_ring_buff_feed(pHdle, (uint8_t *)in_p, CAPTURE_BUFFER_SIZE/ 2);
-}
-
-#ifdef APP_BARE_METAL
 /**
 * @brief  Manage the BSP audio in transfer complete event.
 * @param  Instance Audio in instance.
@@ -384,10 +201,11 @@ void BSP_AUDIO_IN_TransferComplete_CallBack(uint32_t Instance)
 
 	assert(first_half_transfert_callback_flag == 0);
 
-    int16_t *half_capture_buff_to_copy_from = &capture_buffer[CAPTURE_BUFFER_SIZE/2];
-    int16_t *half_playback_buff_to_copy_to = &playback_buffer[current_playback_half_buffer_to_copy_to * CAPTURE_BUFFER_SIZE/2];
-    printf("Audio IN transfer complete to playback half %d\r\n", current_playback_half_buffer_to_copy_to);
-    memcpy(half_playback_buff_to_copy_to, half_capture_buff_to_copy_from, CAPTURE_BUFFER_SIZE/2 * sizeof(int16_t));
+    int16_t *half_capture_buff_to_copy_from = &capture_buffer[BUFFER_SIZE/2];
+    int16_t *half_playback_buff_to_copy_to = &playback_buffer[current_playback_half_buffer_to_copy_to * BUFFER_SIZE/2];
+    printf("Audio IN transfer complete : copying to playback half %d\r\n", current_playback_half_buffer_to_copy_to);
+    memcpy(half_playback_buff_to_copy_to, half_capture_buff_to_copy_from, BUFFER_SIZE/2 * sizeof(int16_t));
+    printf("Audio IN transfer complete : done \r\n");
   }
 }
 
@@ -403,27 +221,29 @@ void BSP_AUDIO_IN_HalfTransfer_CallBack(uint32_t Instance)
 	    //AudioCapture_half_buf_cb(&audio_acq_ctx.ring_buff, audio_acq_ctx.acq_buf, 0U);
 
 	    int16_t *half_capture_buff_to_copy_from = capture_buffer;
-	    int16_t *half_playback_buff_to_copy_to = &playback_buffer[current_playback_half_buffer_to_copy_to * CAPTURE_BUFFER_SIZE/2];
+	    int16_t *half_playback_buff_to_copy_to = &playback_buffer[current_playback_half_buffer_to_copy_to * BUFFER_SIZE/2];
 	    printf("Audio IN half transfer to playback half %d\r\n", current_playback_half_buffer_to_copy_to);
-	    memcpy(half_playback_buff_to_copy_to, half_capture_buff_to_copy_from, CAPTURE_BUFFER_SIZE/2 * sizeof(int16_t));
+	    memcpy(half_playback_buff_to_copy_to, half_capture_buff_to_copy_from, BUFFER_SIZE/2 * sizeof(int16_t));
 
 	    if (first_half_transfert_callback_flag == 1)
 	    {
 	    	assert(current_playback_half_buffer_to_copy_to == 0);
 
 	    	/* Start the playback */
-	    	printf("Start the playback\r\n");
+	    	printf("Playback starting...\r\n");
 			if (BSP_ERROR_NONE != BSP_AUDIO_OUT_Play(0, (uint8_t *)playback_buffer, \
-			  CAPTURE_BUFFER_SIZE * sizeof(int16_t)))
+			  BUFFER_SIZE * sizeof(int16_t)))
 			{
 			  Error_Handler();
 			}
 
 	    	first_half_transfert_callback_flag = 0;
+	    	printf("Playback starting : done\r\n");
 	    }
+	    printf("Audio IN half transfer : done \r\n");
 	  }
 }
-#if (CTRL_X_CUBE_AI_AUDIO_OUT==COM_TYPE_HEADSET)
+
 /**
   * @brief  Tx Transfer completed callbacks.
   * @param  None.
@@ -447,7 +267,6 @@ void BSP_AUDIO_OUT_HalfTransfer_CallBack(uint32_t Instance)
 	printf("Audio OUT half transfer\r\n");
 	current_playback_half_buffer_to_copy_to = 0;
 }
-#endif /* (CTRL_X_CUBE_AI_AUDIO_OUT==COM_TYPE_HEADSET)  */
 
 /**
 * @brief  Manages the BSP audio in error event.
@@ -467,13 +286,11 @@ void BSP_PB_Callback(Button_TypeDef Button)
   }*/
 
 }
-#endif
 
 /*==============================================================================
                     private  functions definition
  ============================================================================= */
 
-#if (CTRL_X_CUBE_AI_AUDIO_OUT==COM_TYPE_HEADSET)
 /**
   * @brief  Playback initialization
   * @param  ctx_ptr play back execution context
@@ -496,75 +313,6 @@ static void initAudioPlayBack(void)
   }
   current_playback_half_buffer_to_copy_to = 0;
 }
-
-static void AudioPlayBack(AudioBM_play_back_t *ctx_ptr, int16_t *pData,\
-    uint16_t nbSamples)
-{
-  float lev_db = vumeter((int16_t *)pData,nbSamples);
-  if (lev_db < CTRL_X_CUBE_AI_AUDIO_OUT_DB_THRESHOLD)
-  {
-    for (int i=0; i<nbSamples; i++){
-      pData[i] = 0;
-    }
-  }
-  AudioCapture_ring_buff_feed(& ctx_ptr->ring_buff,(uint8_t *) pData, nbSamples);
-
-  if (ctx_ptr->cnt== 1) 
-  {
-    /* Start the playback */
-    if (BSP_ERROR_NONE != BSP_AUDIO_OUT_Play(0, ctx_ptr->ring_buff.pData, \
-      PLAYBACK_BUFFER_SIZE * sizeof(int16_t)))
-    {
-      Error_Handler();
-    }
-  }
-  ctx_ptr->cnt++;
-}
-
-/**
- * @brief  Displays level of audio on the console in the from of a colored bar
- * @param  IN pAudioSmp : pointer to audio samples
- * @param  IN nb_samples : number of samples
- * @retval audio level in dB
- */
-static float vumeter(int16_t * pAudioSmp,int nb_samples)
-{
-	float sum=0 ;
-	for (int i = 0 ; i < nb_samples ; i ++)
-	{
-		sum += pAudioSmp[i]*pAudioSmp[i];
-	}
-	// Float value here corresponds to log10(2**30)
-	float lev_db = (float)(10*(log10(sum/(nb_samples)) - 9.03089986F));
-	// Casting it back to int and removing scale factor for display
-	int lev = (int) (lev_db + 10 * 9.03089986F) / 5;
-  lev=(lev<0)? 0 : lev;
-  lev=(lev>20)? 20 : lev;
-	printf("\r\033[42m");
-	for (int i = 0 ; i < lev && i < 6 ; i ++)
-	{
-		printf(" ");
-	}
-	printf("\033[43m");
-	for (int i = 6 ; i < lev && i < 12 ; i ++)
-	{
-		printf(" ");
-	}
-	printf("\033[41m");
-	for (int i = 12 ; i < lev ; i ++)
-	{
-		printf(" ");
-	}
-	printf("\033[0m");
-	for (int i = 0 ; i < 20 - lev ; i ++)
-	{
-		printf(" ");
-	}
-	fflush(stdout);
-	return lev_db;
-}
-
-#endif
 
 static void Int_Mem_Config(void)
 {
