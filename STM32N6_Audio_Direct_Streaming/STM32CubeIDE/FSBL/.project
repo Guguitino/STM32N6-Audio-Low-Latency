@@ -35,7 +35,7 @@
 		<link>
 			<name>Doc/README.md</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/README.md</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/README.md</locationURI>
 		</link>
 		<link>
 			<name>Application/Inc/AudioProcess.h</name>

@@ -43,6 +43,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+DMA_HandleTypeDef handle_GPDMA1_Channel8;
+
 MDF_HandleTypeDef MdfHandle0;
 MDF_FilterConfigTypeDef MdfFilterConfig0;
 DMA_NodeTypeDef Node_GPDMA1_Channel6 __NON_CACHEABLE;
@@ -122,9 +124,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    /* USER CODE END WHILE */
 
-  // While loop moved in AudioMain()
-
+    /* USER CODE BEGIN 3 */
+  }
   /* USER CODE END 3 */
 }
 /* USER CODE BEGIN CLK 1 */
@@ -270,6 +275,24 @@ static void MX_GPDMA1_Init(void)
   /* USER CODE BEGIN GPDMA1_Init 1 */
 
   /* USER CODE END GPDMA1_Init 1 */
+  handle_GPDMA1_Channel8.Instance = GPDMA1_Channel8;
+  handle_GPDMA1_Channel8.Init.Request = DMA_REQUEST_SW;
+  handle_GPDMA1_Channel8.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
+  handle_GPDMA1_Channel8.Init.Direction = DMA_MEMORY_TO_MEMORY;
+  handle_GPDMA1_Channel8.Init.SrcInc = DMA_SINC_FIXED;
+  handle_GPDMA1_Channel8.Init.DestInc = DMA_DINC_FIXED;
+  handle_GPDMA1_Channel8.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
+  handle_GPDMA1_Channel8.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
+  handle_GPDMA1_Channel8.Init.Priority = DMA_LOW_PRIORITY_LOW_WEIGHT;
+  handle_GPDMA1_Channel8.Init.SrcBurstLength = 1;
+  handle_GPDMA1_Channel8.Init.DestBurstLength = 1;
+  handle_GPDMA1_Channel8.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0|DMA_DEST_ALLOCATED_PORT0;
+  handle_GPDMA1_Channel8.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
+  handle_GPDMA1_Channel8.Init.Mode = DMA_NORMAL;
+  if (HAL_DMA_Init(&handle_GPDMA1_Channel8) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN GPDMA1_Init 2 */
 
   /* USER CODE END GPDMA1_Init 2 */
@@ -358,6 +381,11 @@ static void MX_MDF1_Init(void)
   /* set up GPDMA configuration */
   /* set GPDMA1 channel 6 used by MDF1 */
   if (HAL_DMA_ConfigChannelAttributes(&handle_GPDMA1_Channel6,DMA_CHANNEL_SEC|DMA_CHANNEL_PRIV|DMA_CHANNEL_SRC_SEC|DMA_CHANNEL_DEST_SEC)!= HAL_OK )
+  {
+    Error_Handler();
+  }
+  /* set GPDMA1 channel 8 used by GPDMA1 */
+  if (HAL_DMA_ConfigChannelAttributes(&handle_GPDMA1_Channel8,DMA_CHANNEL_NSEC|DMA_CHANNEL_PRIV|DMA_CHANNEL_SRC_SEC|DMA_CHANNEL_DEST_SEC)!= HAL_OK )
   {
     Error_Handler();
   }
