@@ -43,3 +43,13 @@ Pour debuger avec CubeIDE :
 - ouvrir un workspace
 - Project->Build Configurations->Set Active->BM
 - Lancer en mode debug ou run en sélectionnant la configuration "BM"
+
+## TODO
+
+Ajout du tuto install Cube IDE ect...
+
+dans le workspace 
+
+Plus de détails sur comment build / debug
+
+build avec make ?
