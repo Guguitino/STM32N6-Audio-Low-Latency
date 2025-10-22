@@ -1,28 +1,49 @@
 # STM32N6-Audio-Low-Latency
 
-This project is a development application to deploy AI models onto the STM32N6570-DK board.
+This project provides a real-time environment for audio processing on the STM32N6 Microcontroller. It is a development application to deploy AI models on the STM32N6570-DK board. 
 
-## STM32CubeIDE projects description
+## Development tools
 
-The real file tree is different from the one seen in CubeIDE, this comes from the linked files feature. Paths described here are from the CubeIDE file tree. 
+This application is tested on STM32N6570-DK.
 
-### STM32N6_Audio_Direct_Streaming
+This project was developed using STM32CubeIDE and its integrated version of CubeMX to generate hardware configuration code. More information on the installation of this software can be found in the **docs** directory.
 
-This is a simple application based on the example MDF_AudioRecorder to stream audio using double buffering.
-The capture is made with the MDF configured with CubeMX and the playback uses the HAL driver to send audio to the audio output. Audio is processed with a very simple low-pass filter.
+## Quick launch
 
-CubeMX is generating the main.c file with initialization code in *application/User*. The only user implementation in this file is the call to `AudioMainInit()` and `AudioMain()`, respectively the user initialization and main loop. User files are in *application/Src* or *application/Inc*.
-
-
-## STM32CubeIDE deployment
-
-- Install CubeIDE
 - Clone the repository
-- Open a workspace
+- Start STM32CubeIDE and create or select a workspace
 - Import the project :
     * File $\rightarrow$ Import $\rightarrow$ Existing projects into Workspace
     * Select a project root directory (e.g. `/STM32N6_Audio_Direct_Streaming`)
-    * Make sure to select all in the projects preview
+    * Make sure all projects are selected in the import preview
     * Click Finish
+- Connect the STM32N6570-DK board via USB
 - Select the FSBL IDE project in the file tree
-- Click Run or Debug
+- Click **Run** or **Debug** to launch the project
+
+## How to create a new STM32CubeIDE project
+
+Here are the steps to create a new STM32CubeIDE project based on an existing one. 
+
+- Copy/paste and rename the root directory of the project to copy.
+- Inside the new directory :
+    - Rename the .ioc file under the root folder
+    - Open the **.project** file under **STM32CubeIDE** with a text editor
+    - Change the project name and the .ioc filename accordingly.
+    - Open the **.project** file under **STM32CubeIDE/FSBL** with a text editor
+    - Rename the project and add `_FSBL` at the end (two projects can't have the same name)
+    - Save all files 
+- Import the new project as described in the Quick Launch.
+
+## Debug tools
+
+The printf() function has been redirected to the Serial Wire Viewer (SWV) console. 
+The console can be opened in the IDE in debug mode :
+- Launch debug session
+- Window $\rightarrow$ Show View $\rightarrow$ SWV $\rightarrow$ SWV ITM Data Console
+
+
+
+## TODO
+
+- Integrate signal processing models from ST’s Model Zoo
