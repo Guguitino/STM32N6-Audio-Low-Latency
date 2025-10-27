@@ -38,6 +38,11 @@
 			<locationURI>PARENT-3-PROJECT_LOC/README.md</locationURI>
 		</link>
 		<link>
+			<name>Application/User/extmem_manager.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/FSBL/Src/extmem_manager.c</locationURI>
+		</link>
+		<link>
 			<name>Application/User/main.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/FSBL/Src/main.c</locationURI>
@@ -135,12 +140,17 @@
 		<link>
 			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_tim.c</name>
 			<type>1</type>
-			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Direct_Streaming/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim.c</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_tim_ex.c</name>
 			<type>1</type>
-			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Direct_Streaming/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim_ex.c</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim_ex.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/ST/AI</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Middlewares/ST/AI</locationURI>
 		</link>
 		<link>
 			<name>Drivers/BSP/Components/wm8904.c</name>
@@ -161,6 +171,11 @@
 			<name>Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_bus.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_bus.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_xspi.c</name>
+			<type>1</type>
+			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Model_Zoo/Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_xspi.c</location>
 		</link>
 	</linkedResources>
 </projectDescription>

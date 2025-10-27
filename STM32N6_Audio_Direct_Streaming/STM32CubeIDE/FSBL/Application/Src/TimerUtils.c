@@ -9,6 +9,18 @@
 #include "stm32n6xx_hal.h"
 #include "stm32n6xx_hal_tim.h"
 
+
+/* Function's execution time measurement
+ * Usage example :
+
+ExecTimeMeasurement DelayMes;
+DelayMes.htim = &htim6;
+ExecTimeMeasurementStart(&DelayMes);
+HAL_Delay(50);
+ExecTimeMeasurementStop(&DelayMes);
+printf("Time measured : %f ms\n", DelayMes.TimeElapsed_ms); // Time measured : 50.53 ms
+
+ * */
 void ExecTimeMeasurementStart(ExecTimeMeasurement *mes)
 {
 	TIM_HandleTypeDef *htim = mes->htim;

@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "extmem_manager.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -51,6 +52,8 @@ DMA_HandleTypeDef handle_GPDMA1_Channel6;
 
 TIM_HandleTypeDef htim6;
 
+XSPI_HandleTypeDef hxspi2;
+
 /* USER CODE BEGIN PV */
 
 SAI_HandleTypeDef hsai_BlockA1;
@@ -67,6 +70,7 @@ static void MX_GPIO_Init(void);
 static void MX_GPDMA1_Init(void);
 static void MX_MDF1_Init(void);
 static void MX_TIM6_Init(void);
+static void MX_XSPI2_Init(void);
 static void SystemIsolation_Config(void);
 /* USER CODE BEGIN PFP */
 
@@ -85,7 +89,8 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	AudioMainInit();
+	AudioCtx AudioCtx;
+	AudioMainInit(&AudioCtx);
   /* USER CODE END 1 */
 
   /* Enable the CPU Cache */
@@ -118,12 +123,19 @@ int main(void)
   MX_GPDMA1_Init();
   MX_MDF1_Init();
   MX_TIM6_Init();
+  MX_XSPI2_Init();
   SystemIsolation_Config();
+  MX_EXTMEM_MANAGER_Init();
   /* USER CODE BEGIN 2 */
 
-  AudioMain();
+  AudioMain(&AudioCtx);
   /* USER CODE END 2 */
 
+  /* Launch the application */
+  if (BOOT_OK != BOOT_Application())
+  {
+    Error_Handler();
+  }
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -190,12 +202,18 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_NONE;
   RCC_OscInitStruct.PLL1.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL1.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL1.PLLM = 4;
+  RCC_OscInitStruct.PLL1.PLLM = 2;
   RCC_OscInitStruct.PLL1.PLLN = 75;
   RCC_OscInitStruct.PLL1.PLLFractional = 0;
   RCC_OscInitStruct.PLL1.PLLP1 = 1;
   RCC_OscInitStruct.PLL1.PLLP2 = 1;
-  RCC_OscInitStruct.PLL2.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL2.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL2.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL2.PLLM = 4;
+  RCC_OscInitStruct.PLL2.PLLN = 75;
+  RCC_OscInitStruct.PLL2.PLLFractional = 0;
+  RCC_OscInitStruct.PLL2.PLLP1 = 2;
+  RCC_OscInitStruct.PLL2.PLLP2 = 4;
   RCC_OscInitStruct.PLL3.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL3.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL3.PLLM = 8;
@@ -222,12 +240,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV1;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV1;
   RCC_ClkInitStruct.APB5CLKDivider = RCC_APB5_DIV1;
-  RCC_ClkInitStruct.IC1Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-  RCC_ClkInitStruct.IC1Selection.ClockDivider = 2;
+  RCC_ClkInitStruct.IC1Selection.ClockSelection = RCC_ICCLKSOURCE_PLL2;
+  RCC_ClkInitStruct.IC1Selection.ClockDivider = 1;
   RCC_ClkInitStruct.IC2Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-  RCC_ClkInitStruct.IC2Selection.ClockDivider = 3;
+  RCC_ClkInitStruct.IC2Selection.ClockDivider = 6;
   RCC_ClkInitStruct.IC6Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
-  RCC_ClkInitStruct.IC6Selection.ClockDivider = 4;
+  RCC_ClkInitStruct.IC6Selection.ClockDivider = 3;
   RCC_ClkInitStruct.IC11Selection.ClockSelection = RCC_ICCLKSOURCE_PLL1;
   RCC_ClkInitStruct.IC11Selection.ClockDivider = 3;
 
@@ -421,6 +439,57 @@ static void MX_TIM6_Init(void)
 }
 
 /**
+  * @brief XSPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_XSPI2_Init(void)
+{
+
+  /* USER CODE BEGIN XSPI2_Init 0 */
+
+  /* USER CODE END XSPI2_Init 0 */
+
+  XSPIM_CfgTypeDef sXspiManagerCfg = {0};
+
+  /* USER CODE BEGIN XSPI2_Init 1 */
+
+  /* USER CODE END XSPI2_Init 1 */
+  /* XSPI2 parameter configuration*/
+  hxspi2.Instance = XSPI2;
+  hxspi2.Init.FifoThresholdByte = 4;
+  hxspi2.Init.MemoryMode = HAL_XSPI_SINGLE_MEM;
+  hxspi2.Init.MemoryType = HAL_XSPI_MEMTYPE_MICRON;
+  hxspi2.Init.MemorySize = HAL_XSPI_SIZE_1GB;
+  hxspi2.Init.ChipSelectHighTimeCycle = 1;
+  hxspi2.Init.FreeRunningClock = HAL_XSPI_FREERUNCLK_DISABLE;
+  hxspi2.Init.ClockMode = HAL_XSPI_CLOCK_MODE_0;
+  hxspi2.Init.WrapSize = HAL_XSPI_WRAP_NOT_SUPPORTED;
+  hxspi2.Init.ClockPrescaler = 0;
+  hxspi2.Init.SampleShifting = HAL_XSPI_SAMPLE_SHIFT_NONE;
+  hxspi2.Init.DelayHoldQuarterCycle = HAL_XSPI_DHQC_ENABLE;
+  hxspi2.Init.ChipSelectBoundary = HAL_XSPI_BONDARYOF_NONE;
+  hxspi2.Init.MaxTran = 0;
+  hxspi2.Init.Refresh = 0;
+  hxspi2.Init.MemorySelect = HAL_XSPI_CSSEL_NCS1;
+  if (HAL_XSPI_Init(&hxspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sXspiManagerCfg.nCSOverride = HAL_XSPI_CSSEL_OVR_DISABLED;
+  sXspiManagerCfg.IOPort = HAL_XSPIM_IOPORT_2;
+  sXspiManagerCfg.Req2AckTime = 1;
+  if (HAL_XSPIM_Config(&hxspi2, &sXspiManagerCfg, HAL_XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN XSPI2_Init 2 */
+
+  /* USER CODE END XSPI2_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -434,6 +503,7 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPION_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 

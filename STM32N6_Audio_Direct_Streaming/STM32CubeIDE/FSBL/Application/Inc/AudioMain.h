@@ -8,6 +8,9 @@
 #ifndef APPLICATION_INC_AUDIOMAIN_H_
 #define APPLICATION_INC_AUDIOMAIN_H_
 
+#define AUDIO_FREQUENCY 16000
+#define FFT_BUFFER_SIZE 2048
+
 void AudioMainInit(void);
 void AudioMain(void);
 

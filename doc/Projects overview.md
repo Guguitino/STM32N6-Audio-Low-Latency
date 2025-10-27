@@ -4,6 +4,13 @@ The real file tree is different from the one seen in CubeIDE, this comes from th
 
 The file tree seen in STM32CubeIDE as the same structure as the file tree under the **STM32CubeIDE** folder. Only CubeMX generated files are linked.
 
+## Debug tools
+
+The printf() function has been redirected to the Serial Wire Viewer (SWV) console. 
+The console can be opened in the IDE in debug mode :
+- Launch debug session
+- Window $\rightarrow$ Show View $\rightarrow$ SWV $\rightarrow$ SWV ITM Data Console
+
 ## STM32N6_Audio_Direct_Streaming
 
 This is a simple application based on the example MDF_AudioRecorder to stream audio using double buffering.
@@ -38,9 +45,9 @@ CubeMX is generating the main.c file with initialization code in **application/U
 
 ## STM32N6_Audio_Model_Zoo
 
-This project aims to reproduce and extend the **ST Model Zoo Speech Enhancement** application. 
+WIP
 
-For now, it is just a copy of STM32N6_Audio_Direct_Streaming
+This project aims to reproduce and extend the **ST Model Zoo Speech Enhancement** application. 
 
 
 ### Objectives

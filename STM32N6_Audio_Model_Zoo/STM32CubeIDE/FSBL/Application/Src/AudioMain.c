@@ -15,8 +15,8 @@
 #include "wm8904.h"
 #include <stdio.h>
 
-
 #define AUDIO_FREQUENCY 16000
+#define FFT_BUFFER_SIZE 2048
 
 extern MDF_HandleTypeDef MdfHandle0;
 extern MDF_FilterConfigTypeDef MdfFilterConfig0;
@@ -56,18 +56,15 @@ static void Playback_Init(void);
 
 int _write(int file, char *ptr, int len);
 
-uint32_t time_start;
-uint32_t time_stop;
-uint32_t time_delta;
-
-
-void AudioMainInit(void)
+void AudioMainInit(AudioCtx_t *AudioCtx)
 {
 	/* USER CODE BEGIN 1 */
 	MPU_Config();
+
+	initAudioProc(AudioCtx);
 }
 
-void AudioMain(void)
+void AudioMain(AudioCtx_t *AudioCtx)
 {
 	/* USER CODE BEGIN 1 */
 	MDF_DmaConfigTypeDef dma_config;
@@ -109,18 +106,7 @@ void AudioMain(void)
 		Error_Handler();
 	}
 
-	LowPass_FirstOrder_Init(&LPFilter, 1000.0f, (float32_t)AUDIO_FREQUENCY);
-
 	uint8_t LedIndex = 0;
-
-	HAL_TIM_Base_Start(&htim6);
-
-	ExecTimeMeasurement DelayMes;
-	DelayMes.htim = &htim6;
-	ExecTimeMeasurementStart(&DelayMes);
-	HAL_Delay(50);
-	ExecTimeMeasurementStop(&DelayMes);
-	printf("Time measured : %f ms\n", DelayMes.TimeElapsed_ms);
 
 
 	while (1)
@@ -139,7 +125,7 @@ void AudioMain(void)
 			int16_t *AudioInBuffer = &CaptureBuffer[0];
 			int16_t *AudioOutBuffer = &PlaybackBuffer[0];
 
-			AudioProcess(AudioInBuffer, AudioOutBuffer, &LPFilter);
+			AudioProcess(AudioInBuffer, AudioOutBuffer, AudioCtx);
 			CaptureHalfBufferCplt  = 0;
 
 		}
@@ -148,7 +134,7 @@ void AudioMain(void)
 			int16_t *AudioInBuffer = &CaptureBuffer[AUDIO_BUFFER_SIZE/2];
 			int16_t *AudioOutBuffer = &PlaybackBuffer[AUDIO_BUFFER_SIZE/2];
 
-			AudioProcess(AudioInBuffer, AudioOutBuffer, &LPFilter);
+			AudioProcess(AudioInBuffer, AudioOutBuffer, AudioCtx);
 			LedIndex++;
 			CaptureBufferCplt = 0;
 		}
@@ -334,6 +320,38 @@ void HAL_MDF_AcqCpltCallback(MDF_HandleTypeDef *hmdf)
 void HAL_MDF_AcqHalfCpltCallback(MDF_HandleTypeDef *hmdf)
 {
 	CaptureHalfBufferCplt = 1;
+}
+
+/**
+ * @brief  Initializes all Audio processing
+ * @param  proc_ctx_ptr pointer to processing context
+ * @retval None
+ */
+void initAudioProc(AudioCtx_t *AudioCtx)
+{
+  struct npu_model_info *pxInfo;
+
+  /* get the AI model */
+  AiDPULoadModel( &AudioCtx->AICtx, CTRL_X_CUBE_AI_MODEL_NAME );
+  pxInfo     = &AudioCtx->AICtx.net_exec_ctx->info;
+  AudioCtx->AIInPtr = (int8_t *) LL_Buffer_addr_start(pxInfo->in_bufs[0]);
+  AudioCtx->AIOutPtr = pxInfo->out_bufs[0] ;
+
+  /* clear input samples array ( get silence on first overlayed patch */
+  memset(AudioCtx->ProcBuff,0,PATCH_LENGTH*sizeof(int16_t));
+
+  /* Audio Preprocessing init */
+  PreProc_DPUInit(&AudioCtx->AudioPreProcCtx);
+
+  /* Audio Postprocessing init */
+  PostProc_DPUInit(&AudioCtx->AudioPostProcCtx);
+
+  /* transfer quantization parametres included in AI model to the Audio DPU   */
+  AudioCtx->AudioPreProcCtx.output_Q_offset    = ctx_ptr->aiCtx.input_Q_offset;
+  AudioCtx->AudioPreProcCtx.output_Q_inv_scale =
+            (PREPROC_FLOAT_T) AudioCtx->AICtx.input_Q_inv_scale;
+  AudioCtx->AudioPreProcCtx.quant.output_Q_inv_scale = ctx_ptr->audioPreCtx.output_Q_inv_scale;
+  AudioCtx->AudioPreProcCtx.quant.output_Q_offset = ctx_ptr->audioPreCtx.output_Q_offset;
 }
 
 /**

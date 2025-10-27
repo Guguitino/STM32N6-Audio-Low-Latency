@@ -53,6 +53,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/FSBL/Src/stm32n6xx_it.c</locationURI>
 		</link>
 		<link>
+			<name>Drivers/CMSIS/DSP</name>
+			<type>2</type>
+			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Direct_Streaming/Drivers/CMSIS/DSP</location>
+		</link>
+		<link>
 			<name>Drivers/CMSIS/system_stm32n6xx_fsbl.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/FSBL/Src/system_stm32n6xx_fsbl.c</locationURI>
@@ -135,12 +140,12 @@
 		<link>
 			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_tim.c</name>
 			<type>1</type>
-			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Direct_Streaming/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim.c</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_tim_ex.c</name>
 			<type>1</type>
-			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Direct_Streaming/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim_ex.c</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim_ex.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/BSP/Components/wm8904.c</name>

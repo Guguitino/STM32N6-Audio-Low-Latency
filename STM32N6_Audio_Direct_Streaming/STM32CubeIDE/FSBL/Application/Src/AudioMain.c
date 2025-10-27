@@ -13,10 +13,8 @@
 #include "stm32n6570_discovery_bus.h"
 #include "audio.h"
 #include "wm8904.h"
+#include "arm_math.h"
 #include <stdio.h>
-
-
-#define AUDIO_FREQUENCY 16000
 
 extern MDF_HandleTypeDef MdfHandle0;
 extern MDF_FilterConfigTypeDef MdfFilterConfig0;
@@ -40,7 +38,13 @@ static void *Audio_CompObj;
 static int16_t CaptureBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
 static int16_t PlaybackBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
 
-static LowPass_FirstOrder LPFilter;
+LowPass_FirstOrder LPFilter;
+
+arm_rfft_fast_instance_f32 fftHandler;
+float32_t fftInBuffer[FFT_BUFFER_SIZE];
+float32_t fftOutBuffer[FFT_BUFFER_SIZE];
+
+uint8_t fftFlag = 0;
 
 extern void SystemClock_Config(void);
 extern void PeriphCommonClock_Config(void);
@@ -55,11 +59,6 @@ static void MX_SAI1_Init(void);
 static void Playback_Init(void);
 
 int _write(int file, char *ptr, int len);
-
-uint32_t time_start;
-uint32_t time_stop;
-uint32_t time_delta;
-
 
 void AudioMainInit(void)
 {
@@ -115,6 +114,7 @@ void AudioMain(void)
 
 	HAL_TIM_Base_Start(&htim6);
 
+	/* Time measurement demo */
 	ExecTimeMeasurement DelayMes;
 	DelayMes.htim = &htim6;
 	ExecTimeMeasurementStart(&DelayMes);
@@ -123,15 +123,40 @@ void AudioMain(void)
 	printf("Time measured : %f ms\n", DelayMes.TimeElapsed_ms);
 
 
+	float32_t peakVal = 0.0f;
+	uint16_t peakHz = 0;
+	/* Initialize FFT */
+	arm_rfft_fast_init_f32(&fftHandler, FFT_BUFFER_SIZE);
+
+
 	while (1)
 	{
-
-
-
 		if(LedIndex == 10)
 		{
 			BSP_LED_Toggle(LED_GREEN);
 			LedIndex = 0;
+		}
+
+		if(fftFlag)
+		{
+			peakVal = 0.0f;
+			peakHz = 0.0f;
+
+			uint16_t freqIndex = 0;
+			for(uint16_t Index = 0;Index < FFT_BUFFER_SIZE; Index += 2)
+			{
+				float32_t curVal = sqrtf((fftOutBuffer[Index] * fftOutBuffer[Index]) + (fftOutBuffer[Index + 1] + fftOutBuffer[Index + 1]));
+
+				if (curVal > peakVal)
+				{
+					peakVal = curVal;
+					peakHz = (uint16_t) (freqIndex * AUDIO_FREQUENCY/ ((float32_t)FFT_BUFFER_SIZE));
+				}
+				freqIndex++;
+			}
+			fftFlag = 0;
+
+			printf("%d\n", peakHz);
 		}
 
 		if(CaptureHalfBufferCplt == 1)
@@ -139,7 +164,7 @@ void AudioMain(void)
 			int16_t *AudioInBuffer = &CaptureBuffer[0];
 			int16_t *AudioOutBuffer = &PlaybackBuffer[0];
 
-			AudioProcess(AudioInBuffer, AudioOutBuffer, &LPFilter);
+			AudioProcess(AudioInBuffer, AudioOutBuffer);
 			CaptureHalfBufferCplt  = 0;
 
 		}
@@ -148,7 +173,7 @@ void AudioMain(void)
 			int16_t *AudioInBuffer = &CaptureBuffer[AUDIO_BUFFER_SIZE/2];
 			int16_t *AudioOutBuffer = &PlaybackBuffer[AUDIO_BUFFER_SIZE/2];
 
-			AudioProcess(AudioInBuffer, AudioOutBuffer, &LPFilter);
+			AudioProcess(AudioInBuffer, AudioOutBuffer);
 			LedIndex++;
 			CaptureBufferCplt = 0;
 		}

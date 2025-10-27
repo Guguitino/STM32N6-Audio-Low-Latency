@@ -24,9 +24,9 @@
  * limitations under the License.
  */
 
-#include "arm_cmplx_conj_f16.c"
-#include "arm_cmplx_dot_prod_f16.c"
-#include "arm_cmplx_mag_f16.c"
-#include "arm_cmplx_mag_squared_f16.c"
-#include "arm_cmplx_mult_cmplx_f16.c"
-#include "arm_cmplx_mult_real_f16.c"
+//#include "arm_cmplx_conj_f16.c"
+//#include "arm_cmplx_dot_prod_f16.c"
+//#include "arm_cmplx_mag_f16.c"
+//#include "arm_cmplx_mag_squared_f16.c"
+//#include "arm_cmplx_mult_cmplx_f16.c"
+//#include "arm_cmplx_mult_real_f16.c"

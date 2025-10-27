@@ -17,7 +17,7 @@ STM32CubeIDE and STM32CubeProgrammer are the 2 main applications to program on a
 unzip st-stm32cubide(...).sh zip
 chmod +x st-stm32cubeide(...).sh
 sudo ./st-stm32cubeide(...).sh
-```!
+```
 - Accept the license agreement.
 - Choose an installation path.
 - Accept installing STLinkServer.
