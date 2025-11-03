@@ -26,12 +26,12 @@
  * limitations under the License.
  */
 
-#include "arm_abs_f16.c"
-#include "arm_add_f16.c"
-#include "arm_dot_prod_f16.c"
-#include "arm_mult_f16.c"
-#include "arm_negate_f16.c"
-#include "arm_offset_f16.c"
-#include "arm_scale_f16.c"
-#include "arm_sub_f16.c"
-#include "arm_clip_f16.c"
+//#include "arm_abs_f16.c"
+//#include "arm_add_f16.c"
+//#include "arm_dot_prod_f16.c"
+//#include "arm_mult_f16.c"
+//#include "arm_negate_f16.c"
+//#include "arm_offset_f16.c"
+//#include "arm_scale_f16.c"
+//#include "arm_sub_f16.c"
+//#include "arm_clip_f16.c"

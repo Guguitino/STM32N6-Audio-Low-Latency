@@ -28,8 +28,12 @@ void AudioProcess(int16_t *AudioInBuffer, int16_t *AudioOutBuffer)
 	{
 		SampleIn = ((float32_t)AudioInBuffer[SampleIndex]) / 32768.0f;
 
+
+		SampleProcessed = LowPass_FirstOrder_Update(&LPFilter, SampleIn);
+		//sample_processed = sample_in;
+
 		// Fill fft buffer
-		fftInBuffer[fftIndex] = SampleIn;
+		fftInBuffer[fftIndex] = SampleProcessed;
 		fftIndex++;
 
 		if(fftIndex == FFT_BUFFER_SIZE)
@@ -41,8 +45,7 @@ void AudioProcess(int16_t *AudioInBuffer, int16_t *AudioOutBuffer)
 			fftIndex = 0;
 		}
 
-		SampleProcessed = LowPass_FirstOrder_Update(&LPFilter, SampleIn);
-		//sample_processed = sample_in;
+
 
 		SampleOut = (int16_t)(SampleProcessed * 32768.0f);
 		AudioOutBuffer[SampleIndex] = SampleOut;

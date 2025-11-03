@@ -38,9 +38,9 @@
 			<locationURI>PARENT-3-PROJECT_LOC/README.md</locationURI>
 		</link>
 		<link>
-			<name>Application/User/extmem_manager.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/FSBL/Src/extmem_manager.c</locationURI>
+			<name>Application/User/Inc</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/FSBL/Inc</locationURI>
 		</link>
 		<link>
 			<name>Application/User/main.c</name>
@@ -58,14 +58,29 @@
 			<locationURI>PARENT-2-PROJECT_LOC/FSBL/Src/stm32n6xx_it.c</locationURI>
 		</link>
 		<link>
+			<name>Drivers/CMSIS/DSP</name>
+			<type>2</type>
+			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Model_Zoo/Drivers/CMSIS/DSP</location>
+		</link>
+		<link>
 			<name>Drivers/CMSIS/system_stm32n6xx_fsbl.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/FSBL/Src/system_stm32n6xx_fsbl.c</locationURI>
 		</link>
 		<link>
+			<name>Drivers/STM32N6xx_HAL_Driver/Inc</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Inc</locationURI>
+		</link>
+		<link>
 			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_cacheaxi.c</name>
+			<type>1</type>
+			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Model_Zoo/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_cacheaxi.c</location>
 		</link>
 		<link>
 			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_cortex.c</name>
@@ -128,6 +143,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_rcc_ex.c</locationURI>
 		</link>
 		<link>
+			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_rif.c</name>
+			<type>1</type>
+			<location>/home/adamg/STApps/STM32CubeN6/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_rif.c</location>
+		</link>
+		<link>
 			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_sai.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_sai.c</locationURI>
@@ -148,9 +168,24 @@
 			<locationURI>PARENT-2-PROJECT_LOC/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_tim_ex.c</locationURI>
 		</link>
 		<link>
-			<name>Middlewares/ST/AI</name>
+			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_uart.c</name>
+			<type>1</type>
+			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Model_Zoo/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_uart.c</location>
+		</link>
+		<link>
+			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_uart_ex.c</name>
+			<type>1</type>
+			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Model_Zoo/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_uart_ex.c</location>
+		</link>
+		<link>
+			<name>Drivers/STM32N6xx_HAL_Driver/stm32n6xx_hal_xspi.c</name>
+			<type>1</type>
+			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Model_Zoo/Drivers/STM32N6xx_HAL_Driver/Src/stm32n6xx_hal_xspi.c</location>
+		</link>
+		<link>
+			<name>Drivers/BSP/Components/mx66uw1g45g</name>
 			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/Middlewares/ST/AI</locationURI>
+			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Model_Zoo/Drivers/BSP/Components/mx66uw1g45g</location>
 		</link>
 		<link>
 			<name>Drivers/BSP/Components/wm8904.c</name>
@@ -176,6 +211,11 @@
 			<name>Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_xspi.c</name>
 			<type>1</type>
 			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Model_Zoo/Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_xspi.c</location>
+		</link>
+		<link>
+			<name>Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_xspi.h</name>
+			<type>1</type>
+			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Model_Zoo/Drivers/BSP/STM32N6570-DK/stm32n6570_discovery_xspi.h</location>
 		</link>
 	</linkedResources>
 </projectDescription>

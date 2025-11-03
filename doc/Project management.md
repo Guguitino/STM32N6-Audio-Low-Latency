@@ -77,3 +77,72 @@ The DSP library can now be used in the project by including `arm_math.h`
 
 - A guide to integrate the library made by ST : https://community.st.com/t5/stm32-mcus/how-to-integrate-cmsis-dsp-libraries-on-a-stm32-project/ta-p/666790
 
+## Clock configuration
+
+Configure the clock according to the maximum supported frequencies (overdrive mode). This mode needs the **EXT_SMPS_MODE** pin to be configured. 
+Therefore, the corresponding pin PF4 must be configured as **GPIO_OutPut** and assigned the **FSBL Pin Context**. This can be done under System Core $\rightarrow$ GPIO 
+
+### RCC configuration
+
+In the pinout & Configuration tab, under System Core $\rightarrow$ RCC:
+
+In the Mode menu :
+- Disable everything.
+- High speed clock : Crystal/Ceramic Resonator.
+
+In Configuration menu :
+- Power Regulator Voltage Scale : Power Regulator Voltage Scale 0
+- Other parameters stay with their default value
+
+### Clock configuration menu
+
+#### PLL configuration
+- PLL1: 
+    - Source Mux: HSI 
+    - div: /2, *25, /1, /1 
+    - freq: 800 MHz
+- PLL2: 
+    - Source Mux: HSI 
+    - div: /8, *125, /1, /1
+    - freq: 1000 MHz
+- PLL3: 
+    - Source Mux: HSI 
+    - div: /2, *25, /1, /1 
+    - freq: 800 MHz
+- PLL3: 
+    - Source Mux: HSI 
+    - div: /8, *225, /6, /6 
+    - freq: 50 MHz
+
+#### IC clock source
+
+- IC1
+    - Source : PLL1
+    - div : /1
+    - freq : 800 MHz
+- IC2
+    - Source : PLL1
+    - div : /2
+    - freq : 400 MHz
+- IC3
+    - Source : PLL4
+    - div : /1
+    - freq : 50 MHz
+- IC6
+    - Source : PLL2
+    - div : /1
+    - freq : 1000 MHz
+- IC11
+    - Source : PLL3
+    - div : /1
+    - freq : 800 MHz
+
+#### System clock Mux
+
+- SYSB : IC2
+- SYSC : IC6
+- SYSD : IC11
+
+### Resources 
+
+- ow to build an AI application from scratch : https://community.st.com/t5/stm32-mcus/how-to-build-an-ai-application-from-scratch-on-the-stm32n6570-dk/ta-p/825591#toc-hId--1516025603

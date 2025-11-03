@@ -30,6 +30,10 @@
 #include "cpu_stats.h"
 #endif
 
+#ifndef SEPARATION_LINE
+#define SEPARATION_LINE "------------------------------------------------------------\n\r"
+#endif
+
 int PreProc_DPUInit(AudioPreProcCtx_t *pCtx)
 {
 	printf("\n\rPreprocessing\n\r");

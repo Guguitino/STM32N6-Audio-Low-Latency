@@ -11,6 +11,7 @@
 #include "TimerUtils.h"
 #include "stm32n6570_discovery.h"
 #include "stm32n6570_discovery_bus.h"
+#include "stm32n6570_discovery_xspi.h"
 #include "audio.h"
 #include "wm8904.h"
 #include <stdio.h>
@@ -53,6 +54,7 @@ static void MPU_Config(void);
 static void WM8904_Probe(void);
 static void MX_SAI1_Init(void);
 static void Playback_Init(void);
+static void Ext_Mem_Config(void);
 
 int _write(int file, char *ptr, int len);
 
@@ -60,6 +62,8 @@ void AudioMainInit(AudioCtx_t *AudioCtx)
 {
 	/* USER CODE BEGIN 1 */
 	MPU_Config();
+	Ext_Mem_Config();
+	NPU_Config();
 
 	initAudioProc(AudioCtx);
 }
@@ -108,12 +112,8 @@ void AudioMain(AudioCtx_t *AudioCtx)
 
 	uint8_t LedIndex = 0;
 
-
 	while (1)
 	{
-
-
-
 		if(LedIndex == 10)
 		{
 			BSP_LED_Toggle(LED_GREEN);
@@ -329,47 +329,58 @@ void HAL_MDF_AcqHalfCpltCallback(MDF_HandleTypeDef *hmdf)
  */
 void initAudioProc(AudioCtx_t *AudioCtx)
 {
-  struct npu_model_info *pxInfo;
+	struct npu_model_info *pxInfo;
 
-  /* get the AI model */
-  AiDPULoadModel( &AudioCtx->AICtx, CTRL_X_CUBE_AI_MODEL_NAME );
-  pxInfo     = &AudioCtx->AICtx.net_exec_ctx->info;
-  AudioCtx->AIInPtr = (int8_t *) LL_Buffer_addr_start(pxInfo->in_bufs[0]);
-  AudioCtx->AIOutPtr = pxInfo->out_bufs[0] ;
+	/* get the AI model */
+	AiDPULoadModel( &AudioCtx->AICtx, CTRL_X_CUBE_AI_MODEL_NAME );
+	pxInfo     = &AudioCtx->AICtx.net_exec_ctx->info;
+	AudioCtx->AIInPtr = (int8_t *) LL_Buffer_addr_start(pxInfo->in_bufs[0]);
+	AudioCtx->AIOutPtr = pxInfo->out_bufs[0] ;
 
-  /* clear input samples array ( get silence on first overlayed patch */
-  memset(AudioCtx->ProcBuff,0,PATCH_LENGTH*sizeof(int16_t));
+	/* clear input samples array ( get silence on first overlayed patch */
+	memset(AudioCtx->ProcBuff,0,PATCH_LENGTH*sizeof(int16_t));
 
-  /* Audio Preprocessing init */
-  PreProc_DPUInit(&AudioCtx->AudioPreProcCtx);
+	/* Audio Preprocessing init */
+	PreProc_DPUInit(&AudioCtx->AudioPreProcCtx);
 
-  /* Audio Postprocessing init */
-  PostProc_DPUInit(&AudioCtx->AudioPostProcCtx);
+	/* Audio Postprocessing init */
+	PostProc_DPUInit(&AudioCtx->AudioPostProcCtx);
 
-  /* transfer quantization parametres included in AI model to the Audio DPU   */
-  AudioCtx->AudioPreProcCtx.output_Q_offset    = ctx_ptr->aiCtx.input_Q_offset;
-  AudioCtx->AudioPreProcCtx.output_Q_inv_scale =
-            (PREPROC_FLOAT_T) AudioCtx->AICtx.input_Q_inv_scale;
-  AudioCtx->AudioPreProcCtx.quant.output_Q_inv_scale = ctx_ptr->audioPreCtx.output_Q_inv_scale;
-  AudioCtx->AudioPreProcCtx.quant.output_Q_offset = ctx_ptr->audioPreCtx.output_Q_offset;
+	/* transfer quantization parametres included in AI model to the Audio DPU   */
+	AudioCtx->AudioPreProcCtx.output_Q_offset    = AudioCtx->AICtx.input_Q_offset;
+	AudioCtx->AudioPreProcCtx.output_Q_inv_scale =
+			(PREPROC_FLOAT_T) AudioCtx->AICtx.input_Q_inv_scale;
+	AudioCtx->AudioPreProcCtx.quant.output_Q_inv_scale = AudioCtx->AudioPreProcCtx.output_Q_inv_scale;
+	AudioCtx->AudioPreProcCtx.quant.output_Q_offset = AudioCtx->AudioPreProcCtx.output_Q_offset;
+
+	AudioCtx->AcqIndex = 0;
+	memset(AudioCtx->OvlSamples, 0, AUDIO_ACQ_OFFSET*sizeof(int16_t));
 }
 
 /**
- * @brief  Re-directing printf() function to ITM SWV console
+ * @brief  external memories configuration (Flash & RAM).
+ * @param  None.
  * @retval None.
  */
-int _write(int file, char *ptr, int len)
+static void Ext_Mem_Config(void)
 {
-    for (int i = 0; i < len; i++) {
-        ITM_SendChar(*ptr++);
-    }
-    return len;
+	BSP_XSPI_NOR_Init_t Flash;
+	Flash.InterfaceMode = MX66UW1G45G_OPI_MODE;
+	Flash.TransferRate = MX66UW1G45G_DTR_TRANSFER;
+
+	if(BSP_XSPI_NOR_Init(0, &Flash) != BSP_ERROR_NONE)
+	{
+		__BKPT(0);
+	}
+	BSP_XSPI_NOR_EnableMemoryMappedMode(0);
+	MODIFY_REG(XSPI2->CR, XSPI_CR_NOPREF, HAL_XSPI_AUTOMATIC_PREFETCH_DISABLE); /* Hotfix for xspi: no prefetch */
+
+#ifdef USE_EXT_SRAM
+	BSP_XSPI_RAM_Init(0);
+	BSP_XSPI_RAM_EnableMemoryMappedMode(0);
+	MODIFY_REG(XSPI1->CR, XSPI_CR_NOPREF, HAL_XSPI_AUTOMATIC_PREFETCH_DISABLE); /* Hotfix for xspi: no prefetch */
+#endif
 }
-
-
-
-
-
 
 
 

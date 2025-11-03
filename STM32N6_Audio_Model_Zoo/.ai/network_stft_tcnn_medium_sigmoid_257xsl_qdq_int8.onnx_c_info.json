@@ -26851,7 +26851,7 @@
   "ec_blobs_info": [],
   "environment": {
     "generated_model": {
-      "generated_time": "2025-10-23T13:51:39.296129788+0000",
+      "generated_time": "2025-10-28T08:38:20.209084653+0000",
       "model_files": [
         {
           "name": "network.c",
@@ -26899,12 +26899,12 @@
       "size": 0,
       "type": ""
     },
-    "network_signature": "0xfb296b71a59d716c",
+    "network_signature": "0x3526efe1b734ac4c",
     "target": "",
     "test_name": "",
     "tools": [
       {
-        "arguments": "analyze --target stm32n6 --name network -m /home/adamg/STApps/ModelZOO/stm32ai-modelzoo/speech_enhancement/stft_tcnn/ST_pretrainedmodel_public_dataset/valentini/stft_tcnn_medium_sigmoid_257xsl_qdq_int8.onnx --st-neural-art n6-allmems-O3@/home/adamg/STM32Cube/Repository/Packs/STMicroelectronics/X-CUBE-AI/10.2.0/scripts/N6_scripts/user_neuralart.json --workspace /tmp/mxAI_workspace966919829999217965082753612075834 --output /home/adamg/.stm32cubemx/network_output",
+        "arguments": "analyze --target stm32n6 --name network -m /home/adamg/STApps/ModelZOO/stm32ai-modelzoo/speech_enhancement/stft_tcnn/ST_pretrainedmodel_public_dataset/valentini/stft_tcnn_medium_sigmoid_257xsl_qdq_int8.onnx --st-neural-art n6-allmems-O3@/home/adamg/STM32Cube/Repository/Packs/STMicroelectronics/X-CUBE-AI/10.2.0/scripts/N6_scripts/user_neuralart.json --workspace /tmp/mxAI_workspace354409332832718334975535891949668 --output /home/adamg/.stm32cubemx/network_output",
         "environment": [
           "STATS_TYPE=X-CUBE-AI"
         ],
@@ -26925,10 +26925,10 @@
         "version": "2.2.0-20266 2adc00962"
       },
       {
-        "arguments": " -i /home/adamg/.stm32cubemx/network_output/stft_tcnn_medium_sigmoid_257xsl_qdq_int8_OE_3_3_0.onnx --json-quant-file /home/adamg/.stm32cubemx/network_output/stft_tcnn_medium_sigmoid_257xsl_qdq_int8_OE_3_3_0_Q.json -g network.c --load-mdesc /home/adamg/STM32Cube/Repository/Packs/STMicroelectronics/X-CUBE-AI/10.2.0/scripts/N6_scripts/my_mdescs/stm32n6.mdesc --load-mpool /home/adamg/STM32Cube/Repository/Packs/STMicroelectronics/X-CUBE-AI/10.2.0/scripts/N6_scripts/my_mpools/stm32n6.mpool --save-mpool-file /tmp/mxAI_workspace966919829999217965082753612075834/neural_art__network/stm32n6.mpool --out-dir-prefix /tmp/mxAI_workspace966919829999217965082753612075834/neural_art__network/ --optimization 3 --all-buffers-info --mvei --cache-maintenance --Oauto-sched --native-float --enable-virtual-mem-pools --Omax-ca-pipe 4 --Ocache-opt --Os --output-info-file c_info.json",
+        "arguments": " -i /home/adamg/.stm32cubemx/network_output/stft_tcnn_medium_sigmoid_257xsl_qdq_int8_OE_3_3_0.onnx --json-quant-file /home/adamg/.stm32cubemx/network_output/stft_tcnn_medium_sigmoid_257xsl_qdq_int8_OE_3_3_0_Q.json -g network.c --load-mdesc /home/adamg/STM32Cube/Repository/Packs/STMicroelectronics/X-CUBE-AI/10.2.0/scripts/N6_scripts/my_mdescs/stm32n6.mdesc --load-mpool /home/adamg/STM32Cube/Repository/Packs/STMicroelectronics/X-CUBE-AI/10.2.0/scripts/N6_scripts/my_mpools/stm32n6.mpool --save-mpool-file /tmp/mxAI_workspace354409332832718334975535891949668/neural_art__network/stm32n6.mpool --out-dir-prefix /tmp/mxAI_workspace354409332832718334975535891949668/neural_art__network/ --optimization 3 --all-buffers-info --mvei --cache-maintenance --Oauto-sched --native-float --enable-virtual-mem-pools --Omax-ca-pipe 4 --Ocache-opt --Os --output-info-file c_info.json",
         "environment": [],
         "input_model": {
-          "generated_time": "2025-10-23T15:51:39+0200",
+          "generated_time": "2025-10-28T09:38:20+0100",
           "model_files": [
             {
               "name": "stft_tcnn_medium_sigmoid_257xsl_qdq_int8_OE_3_3_0.onnx",

@@ -30,9 +30,14 @@
 #ifdef APP_BARE_METAL
 #include "cpu_stats.h"
 #endif
+
 /* Private define ------------------------------------------------------------*/
 #define CPLX_SPECTRUM_LEN ((CTRL_X_CUBE_AI_SPECTROGRAM_NFFT/2 + 1) * 2 * CTRL_X_CUBE_AI_SPECTROGRAM_COL)
 #define SPECTRUM_MASK_LEN ((CTRL_X_CUBE_AI_SPECTROGRAM_NFFT/2 + 1) * CTRL_X_CUBE_AI_SPECTROGRAM_COL)
+
+#ifndef SEPARATION_LINE
+#define SEPARATION_LINE "------------------------------------------------------------\n\r"
+#endif
 /* Private variables ---------------------------------------------------------*/
 
 /**

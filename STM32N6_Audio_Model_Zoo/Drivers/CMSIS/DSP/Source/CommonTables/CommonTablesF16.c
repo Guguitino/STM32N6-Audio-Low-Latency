@@ -26,6 +26,6 @@
  * limitations under the License.
  */
 
-#include "arm_common_tables_f16.c"
-#include "arm_const_structs_f16.c"
-#include "arm_mve_tables_f16.c"
+//#include "arm_common_tables_f16.c"
+//#include "arm_const_structs_f16.c"
+//#include "arm_mve_tables_f16.c"

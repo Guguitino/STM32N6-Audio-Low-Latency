@@ -45,12 +45,15 @@ CubeMX is generating the main.c file with initialization code in **application/U
 
 ## STM32N6_Audio_Model_Zoo
 
-WIP
+This project aims to reproduce and extend the **ST Model Zoo Speech Enhancement** application. It includes the X-Cube-AI firmware package, the CMSIS-DSP library and other middlewares coming from the original ST's GS_Audio_N6 project. 
 
-This project aims to reproduce and extend the **ST Model Zoo Speech Enhancement** application. 
-
+The project won't compile as its memory footprint seems to exceed the target device's available ROM. 
 
 ### Objectives
 
 - Reproduce the original Model Zoo Speech Enhancement demo  
 - Provide a clean and modular STM32CubeIDE project structure
+
+## STM32N6 Audio_LRUN
+
+This project aim to be a load and run template for audio processing
