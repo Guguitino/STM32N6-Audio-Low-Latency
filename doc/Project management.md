@@ -5,7 +5,7 @@ Here are the steps to create a new STM32CubeIDE project based on an existing one
 - Copy/paste and rename the root directory of the project to copy.
 - Inside the new directory :
     - Rename the .ioc file under the root folder
-    - Open the **.project** file under **STM32CubeIDE** with a text editor
+    - Open the **.project** file under **STM32CubeIDE** with a text editor (Ctrl + H to show hidden files)
     - Change the project name and the .ioc filename accordingly.
     - Open the **.project** file under **STM32CubeIDE/FSBL** with a text editor
     - Rename the project and add `_FSBL` at the end (two projects can't have the same name)
@@ -29,6 +29,36 @@ The file is now linked with an absolute path. The path variable `PROJECT_LOC` re
 - On the new linked file, right click $\rightarrow$ properties
 - Edit the location by using `PROJECT_LOC/`. For example, the project root folder can be referenced with `PROJECT_LOC/../../` 
 - You can check that the resolved location is correct.
+
+## How to create a new pair of .c/.h file
+
+This new file will be located in a folder tree as shown :
+
+```
+Project-Root/
+│
+├── Appli/                    # Source Folder
+│   ├── Inc/                  # User Header files
+│   └── Src/                  # User Source files
+```
+
+- Create a new source folder.
+    - Right-click in the project explorer.
+    - New $\rightarrow$ Source Folder
+    - Select its location, name it and click Finish.
+- Or alternatively link to a folder and defined it as source folder.
+    - Right-click in the project explorer.
+    - New $\rightarrow$ Folder
+    - Advanced >> $\rightarrow$ Link to alternate location (Linked Folder).
+    - Browse to select your folder and click Finish.
+    - Right-click on the project $\rightarrow$ Properties
+    - C/C++ General $\rightarrow$ Paths and symbols $\rightarrow$ Source Location
+    - Click Add Folder and select the Linked Folder.
+- Create 2 new folders Src and Inc.
+- Right-click on the Inc folder $\rightarrow$ Add/remove Include Path...
+- Make sure that all configurations are selected.
+- Create your new files.
+
 
 ## How to use the ARM CMSIS DSP Library for STM32N6 in a CubeIDE Project
 
@@ -145,4 +175,4 @@ In Configuration menu :
 
 ### Resources 
 
-- ow to build an AI application from scratch : https://community.st.com/t5/stm32-mcus/how-to-build-an-ai-application-from-scratch-on-the-stm32n6570-dk/ta-p/825591#toc-hId--1516025603
+- How to build an AI application from scratch : https://community.st.com/t5/stm32-mcus/how-to-build-an-ai-application-from-scratch-on-the-stm32n6570-dk/ta-p/825591#toc-hId--1516025603
