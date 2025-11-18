@@ -33,3 +33,15 @@ int16_t * audioPtr = (AudioProcIsOn) ?
 ```
 
 Le premier pointeur correspond aux échantillons traités et le second aux échantillons bruts.
+
+# Scripts
+
+## deployment
+
+Preparation
+- Parse config
+- generate the header file : ai_model_config.h
+- generate LUT .c/.h files : user_mel_tables.h, user_mel_tables.c : Hann window for STFT
+
+starting deployment : uses stmaic python object (STM32 AI Compiler $\rightarrow$ common/stm32ai_local/)
+- 

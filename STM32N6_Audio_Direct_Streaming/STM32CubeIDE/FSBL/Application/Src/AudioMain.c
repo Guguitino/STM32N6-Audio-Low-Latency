@@ -7,6 +7,7 @@
 #include "AudioMain.h"
 
 /* USER CODE BEGIN Includes */
+#include "main.h"
 #include "AudioProcess.h"
 #include "TimerUtils.h"
 #include "stm32n6570_discovery.h"

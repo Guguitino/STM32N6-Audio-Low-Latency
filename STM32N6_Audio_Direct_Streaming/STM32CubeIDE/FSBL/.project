@@ -55,7 +55,7 @@
 		<link>
 			<name>Drivers/CMSIS/DSP</name>
 			<type>2</type>
-			<location>/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency/STM32N6_Audio_Direct_Streaming/Drivers/CMSIS/DSP</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Drivers/CMSIS/DSP</locationURI>
 		</link>
 		<link>
 			<name>Drivers/CMSIS/system_stm32n6xx_fsbl.c</name>

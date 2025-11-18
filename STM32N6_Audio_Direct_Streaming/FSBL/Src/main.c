@@ -69,7 +69,7 @@ static void MX_MDF1_Init(void);
 static void MX_TIM6_Init(void);
 static void SystemIsolation_Config(void);
 /* USER CODE BEGIN PFP */
-
+void Error_Handler(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
