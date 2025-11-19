@@ -137,41 +137,79 @@ In Configuration menu :
     - freq: 1000 MHz
 - PLL3: 
     - Source Mux: HSI 
-    - div: /2, *25, /1, /1 
-    - freq: 800 MHz
+    - div: /8, *172, /7, /4 
+    - freq: 49.142857 MHz
 - PLL3: 
     - Source Mux: HSI 
-    - div: /8, *225, /6, /6 
-    - freq: 50 MHz
+    - div: /1, *25, /1, /1
+    - freq: 1600 MHz
 
 #### IC clock source
 
-- IC1
+- IC1 (To CPU CLOCK Mux)
     - Source : PLL1
     - div : /1
     - freq : 800 MHz
-- IC2
+- IC2 (To System Clock Mux)
     - Source : PLL1
     - div : /2
     - freq : 400 MHz
-- IC3
+- IC3 (To XSPI2)
     - Source : PLL4
     - div : /1
-    - freq : 50 MHz
-- IC6
+    - freq : 49.142857 MHz
+- IC5 (To CKPER CLOCK Mux)
+  - Unused
+- IC6 (To System Clock Mux)
     - Source : PLL2
     - div : /1
     - freq : 1000 MHz
-- IC11
+- IC7 (To SAI)
+    - Source : PLL3
+    - div : /1
+    - freq : 49.142857 MHz
+- IC8 (To MDF)
+    - Source : PLL3
+    - div : /1
+    - freq : 49.142857 MHz
+- IC9 (To USART1)
+  - Unused
+- IC10 (To CKPER CLOCK Mux)
+  - Unused
+- IC11 (To System Clock Mux)
     - Source : PLL3
     - div : /1
     - freq : 800 MHz
+- IC14 (To USART1)
+    - Unused
+- IC15 (To CKPER CLOCK Mux)
+    - Unused 
+- IC19 (To CKPER CLOCK Mux)
+    - Unused 
+- IC20 (To CKPER CLOCK Mux)
+    - Unused 
 
-#### System clock Mux
+#### Clock Mux
 
-- SYSB : IC2
-- SYSC : IC6
-- SYSD : IC11
+- CPU Clock Mux
+    - IC1 : 800 MHz
+- System Clock Mux
+  - SYSB 
+    - IC2 : 400 MHz
+    - HPRE : /4
+    - TIMPRE : /1
+  - SYSC 
+    - IC6 : 1000 MHz
+  - SYSD
+    - IC11 : 800 MHz
+- CKPER Source Mux
+  - HSI : 64 MHz
+- USART1 Source Mux 
+  - PCLK2 : 100 MHz
+- MDF1 Source Mux 
+  - IC8 : 49.142857 MHz
+- SAI1 Source Mux
+  - IC7 : 49.142857 MHz
 
 ### Resources 
 

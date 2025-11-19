@@ -11,9 +11,7 @@
 #include "AudioProcess.h"
 #include "TimerUtils.h"
 #include "stm32n6570_discovery.h"
-#include "stm32n6570_discovery_bus.h"
-#include "audio.h"
-#include "wm8904.h"
+
 #include "arm_math.h"
 #include <stdio.h>
 
@@ -33,8 +31,7 @@ extern TIM_HandleTypeDef htim6;
 static __IO uint32_t CaptureHalfBufferCplt;
 static __IO uint32_t CaptureBufferCplt;
 
-static AUDIO_Drv_t *Audio_Drv = NULL;
-static void *Audio_CompObj;
+
 
 static int16_t CaptureBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
 static int16_t PlaybackBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
@@ -55,11 +52,9 @@ extern void MX_MDF1_Init(void);
 extern void SystemIsolation_Config(void);
 
 static void MPU_Config(void);
-static void WM8904_Probe(void);
-static void MX_SAI1_Init(void);
-static void Playback_Init(void);
 
-int _write(int file, char *ptr, int len);
+//int _write(int file, char *ptr, int len);
+void print(char *msg, ...);
 
 void AudioMainInit(void)
 {
@@ -83,7 +78,7 @@ void AudioMain(void)
 	}
 
 	/* Initialize playback of recorded data */
-	Playback_Init();
+	//Playback_Init();
 
 	/* Start record */
 	CaptureHalfBufferCplt = 0;
@@ -121,7 +116,8 @@ void AudioMain(void)
 	ExecTimeMeasurementStart(&DelayMes);
 	HAL_Delay(50);
 	ExecTimeMeasurementStop(&DelayMes);
-	printf("Time measured : %f ms\n", DelayMes.TimeElapsed_ms);
+
+	print("Time measured : %f ms\r\n", DelayMes.TimeElapsed_ms);
 
 
 	float32_t peakVal = 0.0f;
@@ -157,7 +153,7 @@ void AudioMain(void)
 			}
 			fftFlag = 0;
 
-			printf("%d\n", peakHz);
+			print("%d\r\n", peakHz);
 		}
 
 		if(CaptureHalfBufferCplt == 1)
@@ -223,124 +219,124 @@ void MPU_Config(void)
 	__set_PRIMASK(primask_bit);
 }
 
-/**
- * @brief  Probe the WM8904 audio codec.
- * @param  None
- * @retval None
- */
-static void WM8904_Probe(void)
-{
-	WM8904_IO_t              IOCtx;
-	uint32_t                 wm8904_id;
-	static WM8904_Object_t   WM8904Obj;
-
-	/* Configure the audio driver */
-	IOCtx.Address     = 0x34U;
-	IOCtx.Init        = BSP_I2C2_Init;
-	IOCtx.DeInit      = BSP_I2C2_DeInit;
-	IOCtx.ReadReg     = BSP_I2C2_ReadReg;
-	IOCtx.WriteReg    = BSP_I2C2_WriteReg;
-	IOCtx.GetTick     = BSP_GetTick;
-
-	if (WM8904_RegisterBusIO(&WM8904Obj, &IOCtx) != WM8904_OK)
-	{
-		Error_Handler();
-	}
-	else if (WM8904_ReadID(&WM8904Obj, &wm8904_id) != WM8904_OK)
-	{
-		Error_Handler();
-	}
-	else if ((wm8904_id & WM8904_ID_MASK) != WM8904_ID)
-	{
-		Error_Handler();
-	}
-	else
-	{
-		Audio_Drv = (AUDIO_Drv_t *) &WM8904_Driver;
-		Audio_CompObj = &WM8904Obj;
-	}
-}
-
-/**
- * @brief SAI1 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_SAI1_Init(void)
-{
-
-	/* USER CODE BEGIN SAI1_Init 0 */
-
-	/* USER CODE END SAI1_Init 0 */
-
-	/* USER CODE BEGIN SAI1_Init 1 */
-
-	/* USER CODE END SAI1_Init 1 */
-	hsai_BlockA1.Instance = SAI1_Block_A;
-	hsai_BlockA1.Init.Protocol = SAI_FREE_PROTOCOL;
-	hsai_BlockA1.Init.AudioMode = SAI_MODEMASTER_TX;
-	hsai_BlockA1.Init.DataSize = SAI_DATASIZE_16;
-	hsai_BlockA1.Init.FirstBit = SAI_FIRSTBIT_MSB;
-	hsai_BlockA1.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
-	hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
-	hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_ENABLE;
-	hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
-	hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_1QF;
-	hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_16K;
-	hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
-	hsai_BlockA1.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
-	hsai_BlockA1.Init.MonoStereoMode = SAI_MONOMODE;
-	hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
-	hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-	hsai_BlockA1.Init.PdmInit.Activation = DISABLE;
-	hsai_BlockA1.FrameInit.FrameLength = 32;
-	hsai_BlockA1.FrameInit.ActiveFrameLength = 16;
-	hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_CHANNEL_IDENTIFICATION;
-	hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
-	hsai_BlockA1.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
-	hsai_BlockA1.SlotInit.FirstBitOffset = 0;
-	hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_16B;
-	hsai_BlockA1.SlotInit.SlotNumber = 2;
-	hsai_BlockA1.SlotInit.SlotActive = SAI_SLOTACTIVE_0 | SAI_SLOTACTIVE_1;
-	if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
-	{
-		Error_Handler();
-	}
-	/* USER CODE BEGIN SAI1_Init 2 */
-
-	/* USER CODE END SAI1_Init 2 */
-
-}
-
-/**
- * @brief  Playback initialization
- * @param  None
- * @retval None
- */
-static void Playback_Init(void)
-{
-	/* Probe the audio codec */
-	WM8904_Probe();
-
-	/* Initialize SAI peripheral */
-	MX_SAI1_Init();
-
-	/* Initialize audio codec */
-	WM8904_Init_t codec_init;
-	codec_init.InputDevice  = WM8904_IN_NONE;
-	codec_init.OutputDevice = WM8904_OUT_HEADPHONE;
-	codec_init.Resolution   = WM8904_RESOLUTION_16B;
-	codec_init.Frequency    = WM8904_FREQUENCY_16K;
-	codec_init.Volume       = 80U;
-	if (Audio_Drv->Init(Audio_CompObj, &codec_init) < 0)
-	{
-		Error_Handler();
-	}
-	if (Audio_Drv->Play(Audio_CompObj) != 0)
-	{
-		Error_Handler();
-	}
-}
+///**
+// * @brief  Probe the WM8904 audio codec.
+// * @param  None
+// * @retval None
+// */
+//static void WM8904_Probe(void)
+//{
+//	WM8904_IO_t              IOCtx;
+//	uint32_t                 wm8904_id;
+//	static WM8904_Object_t   WM8904Obj;
+//
+//	/* Configure the audio driver */
+//	IOCtx.Address     = 0x34U;s
+//	IOCtx.Init        = BSP_I2C2_Init;
+//	IOCtx.DeInit      = BSP_I2C2_DeInit;
+//	IOCtx.ReadReg     = BSP_I2C2_ReadReg;
+//	IOCtx.WriteReg    = BSP_I2C2_WriteReg;
+//	IOCtx.GetTick     = BSP_GetTick;
+//
+//	if (WM8904_RegisterBusIO(&WM8904Obj, &IOCtx) != WM8904_OK)
+//	{
+//		Error_Handler();
+//	}
+//	else if (WM8904_ReadID(&WM8904Obj, &wm8904_id) != WM8904_OK)
+//	{
+//		Error_Handler();
+//	}
+//	else if ((wm8904_id & WM8904_ID_MASK) != WM8904_ID)
+//	{
+//		Error_Handler();
+//	}
+//	else
+//	{
+//		Audio_Drv = (AUDIO_Drv_t *) &WM8904_Driver;
+//		Audio_CompObj = &WM8904Obj;
+//	}
+//}
+//
+///**
+// * @brief SAI1 Initialization Function
+// * @param None
+// * @retval None
+// */
+//static void MX_SAI1_Init(void)
+//{
+//
+//	/* USER CODE BEGIN SAI1_Init 0 */
+//
+//	/* USER CODE END SAI1_Init 0 */
+//
+//	/* USER CODE BEGIN SAI1_Init 1 */
+//
+//	/* USER CODE END SAI1_Init 1 */
+//	hsai_BlockA1.Instance = SAI1_Block_A;
+//	hsai_BlockA1.Init.Protocol = SAI_FREE_PROTOCOL;
+//	hsai_BlockA1.Init.AudioMode = SAI_MODEMASTER_TX;
+//	hsai_BlockA1.Init.DataSize = SAI_DATASIZE_16;
+//	hsai_BlockA1.Init.FirstBit = SAI_FIRSTBIT_MSB;
+//	hsai_BlockA1.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
+//	hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
+//	hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_ENABLE;
+//	hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
+//	hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_1QF;
+//	hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_16K;
+//	hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+//	hsai_BlockA1.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
+//	hsai_BlockA1.Init.MonoStereoMode = SAI_MONOMODE;
+//	hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
+//	hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
+//	hsai_BlockA1.Init.PdmInit.Activation = DISABLE;
+//	hsai_BlockA1.FrameInit.FrameLength = 32;
+//	hsai_BlockA1.FrameInit.ActiveFrameLength = 16;
+//	hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_CHANNEL_IDENTIFICATION;
+//	hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
+//	hsai_BlockA1.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
+//	hsai_BlockA1.SlotInit.FirstBitOffset = 0;
+//	hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_16B;
+//	hsai_BlockA1.SlotInit.SlotNumber = 2;
+//	hsai_BlockA1.SlotInit.SlotActive = SAI_SLOTACTIVE_0 | SAI_SLOTACTIVE_1;
+//	if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
+//	{
+//		Error_Handler();
+//	}
+//	/* USER CODE BEGIN SAI1_Init 2 */
+//
+//	/* USER CODE END SAI1_Init 2 */
+//
+//}
+//
+///**
+// * @brief  Playback initialization
+// * @param  None
+// * @retval None
+// */
+//static void Playback_Init(void)
+//{
+//	/* Probe the audio codec */
+//	WM8904_Probe();
+//
+//	/* Initialize SAI peripheral */
+//	MX_SAI1_Init();
+//
+//	/* Initialize audio codec */
+//	WM8904_Init_t codec_init;
+//	codec_init.InputDevice  = WM8904_IN_NONE;
+//	codec_init.OutputDevice = WM8904_OUT_HEADPHONE;
+//	codec_init.Resolution   = WM8904_RESOLUTION_16B;
+//	codec_init.Frequency    = WM8904_FREQUENCY_16K;
+//	codec_init.Volume       = 80U;
+//	if (Audio_Drv->Init(Audio_CompObj, &codec_init) < 0)
+//	{
+//		Error_Handler();
+//	}
+//	if (Audio_Drv->Play(Audio_CompObj) != 0)
+//	{
+//		Error_Handler();
+//	}
+//}
 
 /**
  * @brief  MDF acquisition complete callback.
@@ -362,18 +358,38 @@ void HAL_MDF_AcqHalfCpltCallback(MDF_HandleTypeDef *hmdf)
 	CaptureHalfBufferCplt = 1;
 }
 
-/**
- * @brief  Re-directing printf() function to ITM SWV console
- * @retval None.
- */
-int _write(int file, char *ptr, int len)
-{
-    for (int i = 0; i < len; i++) {
-        ITM_SendChar(*ptr++);
-    }
-    return len;
-}
+///**
+// * @brief  Re-directing printf() function to ITM SWV console
+// * @retval None.
+// */
+//int _write(int file, char *ptr, int len)
+//{
+//    for (int i = 0; i < len; i++) {
+//        ITM_SendChar(*ptr++);
+//    }
+//    return len;
+//}
 
+void print(char *msg, ...)
+{
+	char buff[250];
+	va_list args;
+	va_start(args, msg);
+	vsprintf(buff, msg, args);
+
+	for(int i = 0; i < strlen(buff); i++)
+	{
+		USART1->TDR = buff[i];
+		while(!(USART1->ISR & USART_ISR_TXE))
+		{
+			//Just waiting
+		}
+	}
+	while(!(USART1->ISR & USART_ISR_TC))
+	{
+		//Just waiting
+	}
+}
 
 
 

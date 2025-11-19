@@ -11,6 +11,9 @@
 #define AUDIO_FREQUENCY 16000
 #define FFT_BUFFER_SIZE 2048
 
+#include <stdio.h>
+#include <stdarg.h>
+
 void AudioMainInit(void);
 void AudioMain(void);
 
