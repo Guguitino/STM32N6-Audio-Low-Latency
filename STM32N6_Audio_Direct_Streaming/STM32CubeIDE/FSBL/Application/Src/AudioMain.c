@@ -28,10 +28,8 @@ extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 
 extern TIM_HandleTypeDef htim6;
 
-static __IO uint32_t CaptureHalfBufferCplt;
-static __IO uint32_t CaptureBufferCplt;
-
-
+static __IO uint32_t CaptureHalfBufferCpltFlag;
+static __IO uint32_t CaptureBufferCpltFlag;
 
 static int16_t CaptureBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
 static int16_t PlaybackBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
@@ -44,6 +42,7 @@ float32_t fftOutBuffer[FFT_BUFFER_SIZE];
 
 uint8_t fftFlag = 0;
 
+
 extern void SystemClock_Config(void);
 extern void PeriphCommonClock_Config(void);
 extern void MX_GPIO_Init(void);
@@ -53,21 +52,12 @@ extern void SystemIsolation_Config(void);
 
 static void MPU_Config(void);
 
-//int _write(int file, char *ptr, int len);
 void print(char *msg, ...);
 
 void AudioMainInit(void)
 {
-	/* USER CODE BEGIN 1 */
 	MPU_Config();
-}
 
-void AudioMain(void)
-{
-	/* USER CODE BEGIN 1 */
-	MDF_DmaConfigTypeDef dma_config;
-
-	/* USER CODE BEGIN 2 */
 	if (BSP_ERROR_NONE != BSP_LED_Init(LED_RED))
 	{
 		Error_Handler();
@@ -76,13 +66,19 @@ void AudioMain(void)
 	{
 		Error_Handler();
 	}
+}
 
-	/* Initialize playback of recorded data */
-	//Playback_Init();
+void AudioMain(void)
+{
+	TimCtx_t TimCtx6 = {};
+	TimCtx6.htim = &htim6;
+	TimInit(&TimCtx6);
+
+	MDF_DmaConfigTypeDef dma_config;
 
 	/* Start record */
-	CaptureHalfBufferCplt = 0;
-	CaptureBufferCplt = 0;
+	CaptureHalfBufferCpltFlag = 0;
+	CaptureBufferCpltFlag = 0;
 
 	dma_config.Address    = (uint32_t)&CaptureBuffer[0];
 	dma_config.DataLength = AUDIO_BUFFER_SIZE * sizeof(int16_t);
@@ -106,33 +102,28 @@ void AudioMain(void)
 
 	LowPass_FirstOrder_Init(&LPFilter, 1000.0f, (float32_t)AUDIO_FREQUENCY);
 
-	uint8_t LedIndex = 0;
-
-	HAL_TIM_Base_Start(&htim6);
-
 	/* Time measurement demo */
-	ExecTimeMeasurement DelayMes;
-	DelayMes.htim = &htim6;
-	ExecTimeMeasurementStart(&DelayMes);
+	ExecTimeMeasurement_t TestMes;
+	TestMes.TimCtx = &TimCtx6;
+	ExecTimeMeasurementStart(&TestMes);
 	HAL_Delay(50);
-	ExecTimeMeasurementStop(&DelayMes);
+	ExecTimeMeasurementStop(&TestMes);
 
-	print("Time measured : %f ms\r\n", DelayMes.TimeElapsed_ms);
+	print("Time measured : %f ms\r\n", TestMes.TimeElapsed_ms);
 
-
-	float32_t peakVal = 0.0f;
-	uint16_t peakHz = 0;
 	/* Initialize FFT */
 	arm_rfft_fast_init_f32(&fftHandler, FFT_BUFFER_SIZE);
+	float32_t peakVal = 0.0f;
+	uint16_t peakHz = 0;
 
+	/* Initialize non blocking delay for the led */
+	NBDelay_t LedDelay = {};
+	LedDelay.TimCtx = &TimCtx6;
+	NBDelayInit(&LedDelay, 500);
 
 	while (1)
 	{
-		if(LedIndex == 10)
-		{
-			BSP_LED_Toggle(LED_GREEN);
-			LedIndex = 0;
-		}
+
 
 		if(fftFlag)
 		{
@@ -153,37 +144,41 @@ void AudioMain(void)
 			}
 			fftFlag = 0;
 
-			print("%d\r\n", peakHz);
+			//print("%d\r\n", peakHz);
 		}
 
-		if(CaptureHalfBufferCplt == 1)
+		if(CaptureHalfBufferCpltFlag == 1)
 		{
 			int16_t *AudioInBuffer = &CaptureBuffer[0];
 			int16_t *AudioOutBuffer = &PlaybackBuffer[0];
 
 			AudioProcess(AudioInBuffer, AudioOutBuffer);
-			CaptureHalfBufferCplt  = 0;
+			CaptureHalfBufferCpltFlag  = 0;
 
 		}
-		if(CaptureBufferCplt == 1)
+		if(CaptureBufferCpltFlag == 1)
 		{
 			int16_t *AudioInBuffer = &CaptureBuffer[AUDIO_BUFFER_SIZE/2];
 			int16_t *AudioOutBuffer = &PlaybackBuffer[AUDIO_BUFFER_SIZE/2];
 
 			AudioProcess(AudioInBuffer, AudioOutBuffer);
-			LedIndex++;
-			CaptureBufferCplt = 0;
+			CaptureBufferCpltFlag = 0;
 		}
-		/* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
+		if(NBDelayHasRunOut(&LedDelay))
+		{
+//			ExecTimeMeasurementStart(&TestMes);
+//			print("Ceci est la ligne 1\r\n");
+//			ExecTimeMeasurementStop(&TestMes);
+//			print("Time measured : %f ms\r\n", TestMes.TimeElapsed_ms);
+			BSP_LED_Toggle(LED_GREEN);
+		}
 	}
-	/* USER CODE END 3 */
 
 }
 
 
-/* USER CODE BEGIN 4 */
+
 void MPU_Config(void)
 {
 	MPU_Region_InitTypeDef default_config = {0};
@@ -345,17 +340,17 @@ void MPU_Config(void)
  */
 void HAL_MDF_AcqCpltCallback(MDF_HandleTypeDef *hmdf)
 {
-	CaptureBufferCplt = 1;
+	CaptureBufferCpltFlag = 1;
 }
 
 /**
  * @brief  MDF acquisition half complete callback.
- * @param  hmdf MDF handle.
+ * @param  hmdf MDF handle.s
  * @retval None.
  */
 void HAL_MDF_AcqHalfCpltCallback(MDF_HandleTypeDef *hmdf)
 {
-	CaptureHalfBufferCplt = 1;
+	CaptureHalfBufferCpltFlag = 1;
 }
 
 ///**

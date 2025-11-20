@@ -63,10 +63,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
-SAI_HandleTypeDef hsai_BlockA1;
-DMA_NodeTypeDef pNode_GPDMACH0 __NON_CACHEABLE;
-DMA_QListTypeDef pQueueLinkList_GPDMACH0;
-DMA_HandleTypeDef handle_GPDMA1_Channel0;
+extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
+extern DMA_HandleTypeDef handle_GPDMA1_Channel6;
 
 static AUDIO_Drv_t *Audio_Drv = NULL;
 static void *Audio_CompObj;
@@ -116,7 +114,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  //WM8904_Probe();
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -490,7 +488,7 @@ static void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 4000-1;
+  htim6.Init.Prescaler = 40000-1;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.Period = 9999;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;

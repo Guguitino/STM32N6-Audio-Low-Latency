@@ -60,11 +60,7 @@ extern DMA_HandleTypeDef handle_GPDMA1_Channel6;
 /* USER CODE END ExternalFunctions */
 
 /* USER CODE BEGIN 0 */
-extern DMA_NodeTypeDef pNode_GPDMACH0;
 
-extern DMA_QListTypeDef pQueueLinkList_GPDMACH0;
-
-extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 /* USER CODE END 0 */
 /**
   * Initializes the Global MSP.

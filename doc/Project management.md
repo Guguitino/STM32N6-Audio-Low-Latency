@@ -214,3 +214,44 @@ In Configuration menu :
 ### Resources 
 
 - How to build an AI application from scratch : https://community.st.com/t5/stm32-mcus/how-to-build-an-ai-application-from-scratch-on-the-stm32n6570-dk/ta-p/825591#toc-hId--1516025603
+
+## Using NPU
+
+WIP
+
+### CubeMX Configuration
+- System config
+    - Activate CACHEAXI
+    - Activate RAMCFG
+        - Use AXISRAM 3, 4, 5, 6
+
+- Connectivity
+    - Activate XSPI2
+        - OctoSPI
+        - FIFO Threshold: 4
+        - Memory Size 1 Gbits
+        - Delay hold quarter cyle: enable
+    - Activate XSPIM
+        - Mode : Direct
+- Security
+    - Activate RIF
+
+### Adding The NetworkRuntime library
+
+- Copy the library folder inside project tree
+- Specify the library name and add its location to the library search path
+    - Libraries (-l) : `:NetworkRuntime1020_CM55_GCC.a`
+    - Library search path (-L) : `<lib path>/Lib/GCC/ARMCortexM55`
+
+### LL_ATON Defines
+
+To add the necessaries LL_ATON Defines :
+
+In the project properties $\rightarrow$ MCU/MPU GCC Compiler $\rightarrow$ Preprocessor:
+- `LL_ATON_PLATFORM=LL_ATON_PLAT_STM32N6`
+- `LL_ATON_OSAL=LL_ATON_OSAL_BARE_METAL`
+- `LL_ATON_RT_MODE=LL_ATON_RT_ASYNC`
+- `LL_ATON_SW_FALLBACK`
+- `LL_ATON_EB_DBG_INFO`
+- `LL_ATON_DUMP_DEBUG_API`
+- `LL_ATON_DBG_BUFFER_INFO_EXCLUDED=1`
