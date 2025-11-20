@@ -7,17 +7,14 @@
 #include "AudioMain.h"
 
 /* USER CODE BEGIN Includes */
+#include "main.h"
 #include "AudioProcess.h"
 #include "TimerUtils.h"
 #include "stm32n6570_discovery.h"
-#include "stm32n6570_discovery_bus.h"
-#include "stm32n6570_discovery_xspi.h"
-#include "audio.h"
-#include "wm8904.h"
-#include <stdio.h>
+#include "logging.h"
 
-#define AUDIO_FREQUENCY 16000
-#define FFT_BUFFER_SIZE 2048
+#include "arm_math.h"
+#include <stdio.h>
 
 extern MDF_HandleTypeDef MdfHandle0;
 extern MDF_FilterConfigTypeDef MdfFilterConfig0;
@@ -32,16 +29,20 @@ extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 
 extern TIM_HandleTypeDef htim6;
 
-static __IO uint32_t CaptureHalfBufferCplt;
-static __IO uint32_t CaptureBufferCplt;
-
-static AUDIO_Drv_t *Audio_Drv = NULL;
-static void *Audio_CompObj;
+static __IO uint32_t CaptureHalfBufferCpltFlag;
+static __IO uint32_t CaptureBufferCpltFlag;
 
 static int16_t CaptureBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
 static int16_t PlaybackBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
 
-static LowPass_FirstOrder LPFilter;
+LowPass_FirstOrder LPFilter;
+
+arm_rfft_fast_instance_f32 fftHandler;
+float32_t fftInBuffer[FFT_BUFFER_SIZE];
+float32_t fftOutBuffer[FFT_BUFFER_SIZE];
+
+uint8_t fftFlag = 0;
+
 
 extern void SystemClock_Config(void);
 extern void PeriphCommonClock_Config(void);
@@ -51,29 +52,11 @@ extern void MX_MDF1_Init(void);
 extern void SystemIsolation_Config(void);
 
 static void MPU_Config(void);
-static void WM8904_Probe(void);
-static void MX_SAI1_Init(void);
-static void Playback_Init(void);
-static void Ext_Mem_Config(void);
 
-int _write(int file, char *ptr, int len);
-
-void AudioMainInit(AudioCtx_t *AudioCtx)
+void AudioMainInit(void)
 {
-	/* USER CODE BEGIN 1 */
 	MPU_Config();
-	Ext_Mem_Config();
-	NPU_Config();
 
-	initAudioProc(AudioCtx);
-}
-
-void AudioMain(AudioCtx_t *AudioCtx)
-{
-	/* USER CODE BEGIN 1 */
-	MDF_DmaConfigTypeDef dma_config;
-
-	/* USER CODE BEGIN 2 */
 	if (BSP_ERROR_NONE != BSP_LED_Init(LED_RED))
 	{
 		Error_Handler();
@@ -82,13 +65,19 @@ void AudioMain(AudioCtx_t *AudioCtx)
 	{
 		Error_Handler();
 	}
+}
 
-	/* Initialize playback of recorded data */
-	Playback_Init();
+void AudioMain(void)
+{
+	TimCtx_t TimCtx6 = {};
+	TimCtx6.htim = &htim6;
+	TimInit(&TimCtx6);
+
+	MDF_DmaConfigTypeDef dma_config;
 
 	/* Start record */
-	CaptureHalfBufferCplt = 0;
-	CaptureBufferCplt = 0;
+	CaptureHalfBufferCpltFlag = 0;
+	CaptureBufferCpltFlag = 0;
 
 	dma_config.Address    = (uint32_t)&CaptureBuffer[0];
 	dma_config.DataLength = AUDIO_BUFFER_SIZE * sizeof(int16_t);
@@ -110,44 +99,85 @@ void AudioMain(AudioCtx_t *AudioCtx)
 		Error_Handler();
 	}
 
-	uint8_t LedIndex = 0;
+	LowPass_FirstOrder_Init(&LPFilter, 1000.0f, (float32_t)AUDIO_FREQUENCY);
+
+	/* Time measurement demo */
+	ExecTimeMeasurement_t TestMes;
+	TestMes.TimCtx = &TimCtx6;
+	ExecTimeMeasurementStart(&TestMes);
+	HAL_Delay(50);
+	ExecTimeMeasurementStop(&TestMes);
+
+	print("Time measured : %f ms\r\n", TestMes.TimeElapsed_ms);
+
+	/* Initialize FFT */
+	arm_rfft_fast_init_f32(&fftHandler, FFT_BUFFER_SIZE);
+	float32_t peakVal = 0.0f;
+	uint16_t peakHz = 0;
+
+	/* Initialize non blocking delay for the led */
+	NBDelay_t LedDelay = {};
+	LedDelay.TimCtx = &TimCtx6;
+	NBDelayInit(&LedDelay, 500);
 
 	while (1)
 	{
-		if(LedIndex == 10)
+
+
+		if(fftFlag)
 		{
-			BSP_LED_Toggle(LED_GREEN);
-			LedIndex = 0;
+			peakVal = 0.0f;
+			peakHz = 0.0f;
+
+			uint16_t freqIndex = 0;
+			for(uint16_t Index = 0;Index < FFT_BUFFER_SIZE; Index += 2)
+			{
+				float32_t curVal = sqrtf((fftOutBuffer[Index] * fftOutBuffer[Index]) + (fftOutBuffer[Index + 1] + fftOutBuffer[Index + 1]));
+
+				if (curVal > peakVal)
+				{
+					peakVal = curVal;
+					peakHz = (uint16_t) (freqIndex * AUDIO_FREQUENCY/ ((float32_t)FFT_BUFFER_SIZE));
+				}
+				freqIndex++;
+			}
+			fftFlag = 0;
+
+			//print("%d\r\n", peakHz);
 		}
 
-		if(CaptureHalfBufferCplt == 1)
+		if(CaptureHalfBufferCpltFlag == 1)
 		{
 			int16_t *AudioInBuffer = &CaptureBuffer[0];
 			int16_t *AudioOutBuffer = &PlaybackBuffer[0];
 
-			AudioProcess(AudioInBuffer, AudioOutBuffer, AudioCtx);
-			CaptureHalfBufferCplt  = 0;
+			AudioProcess(AudioInBuffer, AudioOutBuffer);
+			CaptureHalfBufferCpltFlag  = 0;
 
 		}
-		if(CaptureBufferCplt == 1)
+		if(CaptureBufferCpltFlag == 1)
 		{
 			int16_t *AudioInBuffer = &CaptureBuffer[AUDIO_BUFFER_SIZE/2];
 			int16_t *AudioOutBuffer = &PlaybackBuffer[AUDIO_BUFFER_SIZE/2];
 
-			AudioProcess(AudioInBuffer, AudioOutBuffer, AudioCtx);
-			LedIndex++;
-			CaptureBufferCplt = 0;
+			AudioProcess(AudioInBuffer, AudioOutBuffer);
+			CaptureBufferCpltFlag = 0;
 		}
-		/* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
+		if(NBDelayHasRunOut(&LedDelay))
+		{
+//			ExecTimeMeasurementStart(&TestMes);
+//			print("Ceci est la ligne 1\r\n");
+//			ExecTimeMeasurementStop(&TestMes);
+//			print("Time measured : %f ms\r\n", TestMes.TimeElapsed_ms);
+			BSP_LED_Toggle(LED_GREEN);
+		}
 	}
-	/* USER CODE END 3 */
 
 }
 
 
-/* USER CODE BEGIN 4 */
+
 void MPU_Config(void)
 {
 	MPU_Region_InitTypeDef default_config = {0};
@@ -183,124 +213,124 @@ void MPU_Config(void)
 	__set_PRIMASK(primask_bit);
 }
 
-/**
- * @brief  Probe the WM8904 audio codec.
- * @param  None
- * @retval None
- */
-static void WM8904_Probe(void)
-{
-	WM8904_IO_t              IOCtx;
-	uint32_t                 wm8904_id;
-	static WM8904_Object_t   WM8904Obj;
-
-	/* Configure the audio driver */
-	IOCtx.Address     = 0x34U;
-	IOCtx.Init        = BSP_I2C2_Init;
-	IOCtx.DeInit      = BSP_I2C2_DeInit;
-	IOCtx.ReadReg     = BSP_I2C2_ReadReg;
-	IOCtx.WriteReg    = BSP_I2C2_WriteReg;
-	IOCtx.GetTick     = BSP_GetTick;
-
-	if (WM8904_RegisterBusIO(&WM8904Obj, &IOCtx) != WM8904_OK)
-	{
-		Error_Handler();
-	}
-	else if (WM8904_ReadID(&WM8904Obj, &wm8904_id) != WM8904_OK)
-	{
-		Error_Handler();
-	}
-	else if ((wm8904_id & WM8904_ID_MASK) != WM8904_ID)
-	{
-		Error_Handler();
-	}
-	else
-	{
-		Audio_Drv = (AUDIO_Drv_t *) &WM8904_Driver;
-		Audio_CompObj = &WM8904Obj;
-	}
-}
-
-/**
- * @brief SAI1 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_SAI1_Init(void)
-{
-
-	/* USER CODE BEGIN SAI1_Init 0 */
-
-	/* USER CODE END SAI1_Init 0 */
-
-	/* USER CODE BEGIN SAI1_Init 1 */
-
-	/* USER CODE END SAI1_Init 1 */
-	hsai_BlockA1.Instance = SAI1_Block_A;
-	hsai_BlockA1.Init.Protocol = SAI_FREE_PROTOCOL;
-	hsai_BlockA1.Init.AudioMode = SAI_MODEMASTER_TX;
-	hsai_BlockA1.Init.DataSize = SAI_DATASIZE_16;
-	hsai_BlockA1.Init.FirstBit = SAI_FIRSTBIT_MSB;
-	hsai_BlockA1.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
-	hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
-	hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_ENABLE;
-	hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
-	hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_1QF;
-	hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_16K;
-	hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
-	hsai_BlockA1.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
-	hsai_BlockA1.Init.MonoStereoMode = SAI_MONOMODE;
-	hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
-	hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-	hsai_BlockA1.Init.PdmInit.Activation = DISABLE;
-	hsai_BlockA1.FrameInit.FrameLength = 32;
-	hsai_BlockA1.FrameInit.ActiveFrameLength = 16;
-	hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_CHANNEL_IDENTIFICATION;
-	hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
-	hsai_BlockA1.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
-	hsai_BlockA1.SlotInit.FirstBitOffset = 0;
-	hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_16B;
-	hsai_BlockA1.SlotInit.SlotNumber = 2;
-	hsai_BlockA1.SlotInit.SlotActive = SAI_SLOTACTIVE_0 | SAI_SLOTACTIVE_1;
-	if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
-	{
-		Error_Handler();
-	}
-	/* USER CODE BEGIN SAI1_Init 2 */
-
-	/* USER CODE END SAI1_Init 2 */
-
-}
-
-/**
- * @brief  Playback initialization
- * @param  None
- * @retval None
- */
-static void Playback_Init(void)
-{
-	/* Probe the audio codec */
-	WM8904_Probe();
-
-	/* Initialize SAI peripheral */
-	MX_SAI1_Init();
-
-	/* Initialize audio codec */
-	WM8904_Init_t codec_init;
-	codec_init.InputDevice  = WM8904_IN_NONE;
-	codec_init.OutputDevice = WM8904_OUT_HEADPHONE;
-	codec_init.Resolution   = WM8904_RESOLUTION_16B;
-	codec_init.Frequency    = WM8904_FREQUENCY_16K;
-	codec_init.Volume       = 80U;
-	if (Audio_Drv->Init(Audio_CompObj, &codec_init) < 0)
-	{
-		Error_Handler();
-	}
-	if (Audio_Drv->Play(Audio_CompObj) != 0)
-	{
-		Error_Handler();
-	}
-}
+///**
+// * @brief  Probe the WM8904 audio codec.
+// * @param  None
+// * @retval None
+// */
+//static void WM8904_Probe(void)
+//{
+//	WM8904_IO_t              IOCtx;
+//	uint32_t                 wm8904_id;
+//	static WM8904_Object_t   WM8904Obj;
+//
+//	/* Configure the audio driver */
+//	IOCtx.Address     = 0x34U;s
+//	IOCtx.Init        = BSP_I2C2_Init;
+//	IOCtx.DeInit      = BSP_I2C2_DeInit;
+//	IOCtx.ReadReg     = BSP_I2C2_ReadReg;
+//	IOCtx.WriteReg    = BSP_I2C2_WriteReg;
+//	IOCtx.GetTick     = BSP_GetTick;
+//
+//	if (WM8904_RegisterBusIO(&WM8904Obj, &IOCtx) != WM8904_OK)
+//	{
+//		Error_Handler();
+//	}
+//	else if (WM8904_ReadID(&WM8904Obj, &wm8904_id) != WM8904_OK)
+//	{
+//		Error_Handler();
+//	}
+//	else if ((wm8904_id & WM8904_ID_MASK) != WM8904_ID)
+//	{
+//		Error_Handler();
+//	}
+//	else
+//	{
+//		Audio_Drv = (AUDIO_Drv_t *) &WM8904_Driver;
+//		Audio_CompObj = &WM8904Obj;
+//	}
+//}
+//
+///**
+// * @brief SAI1 Initialization Function
+// * @param None
+// * @retval None
+// */
+//static void MX_SAI1_Init(void)
+//{
+//
+//	/* USER CODE BEGIN SAI1_Init 0 */
+//
+//	/* USER CODE END SAI1_Init 0 */
+//
+//	/* USER CODE BEGIN SAI1_Init 1 */
+//
+//	/* USER CODE END SAI1_Init 1 */
+//	hsai_BlockA1.Instance = SAI1_Block_A;
+//	hsai_BlockA1.Init.Protocol = SAI_FREE_PROTOCOL;
+//	hsai_BlockA1.Init.AudioMode = SAI_MODEMASTER_TX;
+//	hsai_BlockA1.Init.DataSize = SAI_DATASIZE_16;
+//	hsai_BlockA1.Init.FirstBit = SAI_FIRSTBIT_MSB;
+//	hsai_BlockA1.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
+//	hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
+//	hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_ENABLE;
+//	hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
+//	hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_1QF;
+//	hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_16K;
+//	hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+//	hsai_BlockA1.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
+//	hsai_BlockA1.Init.MonoStereoMode = SAI_MONOMODE;
+//	hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
+//	hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
+//	hsai_BlockA1.Init.PdmInit.Activation = DISABLE;
+//	hsai_BlockA1.FrameInit.FrameLength = 32;
+//	hsai_BlockA1.FrameInit.ActiveFrameLength = 16;
+//	hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_CHANNEL_IDENTIFICATION;
+//	hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
+//	hsai_BlockA1.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
+//	hsai_BlockA1.SlotInit.FirstBitOffset = 0;
+//	hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_16B;
+//	hsai_BlockA1.SlotInit.SlotNumber = 2;
+//	hsai_BlockA1.SlotInit.SlotActive = SAI_SLOTACTIVE_0 | SAI_SLOTACTIVE_1;
+//	if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
+//	{
+//		Error_Handler();
+//	}
+//	/* USER CODE BEGIN SAI1_Init 2 */
+//
+//	/* USER CODE END SAI1_Init 2 */
+//
+//}
+//
+///**
+// * @brief  Playback initialization
+// * @param  None
+// * @retval None
+// */
+//static void Playback_Init(void)
+//{
+//	/* Probe the audio codec */
+//	WM8904_Probe();
+//
+//	/* Initialize SAI peripheral */
+//	MX_SAI1_Init();
+//
+//	/* Initialize audio codec */
+//	WM8904_Init_t codec_init;
+//	codec_init.InputDevice  = WM8904_IN_NONE;
+//	codec_init.OutputDevice = WM8904_OUT_HEADPHONE;
+//	codec_init.Resolution   = WM8904_RESOLUTION_16B;
+//	codec_init.Frequency    = WM8904_FREQUENCY_16K;
+//	codec_init.Volume       = 80U;
+//	if (Audio_Drv->Init(Audio_CompObj, &codec_init) < 0)
+//	{
+//		Error_Handler();
+//	}
+//	if (Audio_Drv->Play(Audio_CompObj) != 0)
+//	{
+//		Error_Handler();
+//	}
+//}
 
 /**
  * @brief  MDF acquisition complete callback.
@@ -309,78 +339,35 @@ static void Playback_Init(void)
  */
 void HAL_MDF_AcqCpltCallback(MDF_HandleTypeDef *hmdf)
 {
-	CaptureBufferCplt = 1;
+	CaptureBufferCpltFlag = 1;
 }
 
 /**
  * @brief  MDF acquisition half complete callback.
- * @param  hmdf MDF handle.
+ * @param  hmdf MDF handle.s
  * @retval None.
  */
 void HAL_MDF_AcqHalfCpltCallback(MDF_HandleTypeDef *hmdf)
 {
-	CaptureHalfBufferCplt = 1;
+	CaptureHalfBufferCpltFlag = 1;
 }
 
-/**
- * @brief  Initializes all Audio processing
- * @param  proc_ctx_ptr pointer to processing context
- * @retval None
- */
-void initAudioProc(AudioCtx_t *AudioCtx)
-{
-	struct npu_model_info *pxInfo;
+///**
+// * @brief  Re-directing printf() function to ITM SWV console
+// * @retval None.
+// */
+//int _write(int file, char *ptr, int len)
+//{
+//    for (int i = 0; i < len; i++) {
+//        ITM_SendChar(*ptr++);
+//    }
+//    return len;
+//}
 
-	/* get the AI model */
-	AiDPULoadModel( &AudioCtx->AICtx, CTRL_X_CUBE_AI_MODEL_NAME );
-	pxInfo     = &AudioCtx->AICtx.net_exec_ctx->info;
-	AudioCtx->AIInPtr = (int8_t *) LL_Buffer_addr_start(pxInfo->in_bufs[0]);
-	AudioCtx->AIOutPtr = pxInfo->out_bufs[0] ;
 
-	/* clear input samples array ( get silence on first overlayed patch */
-	memset(AudioCtx->ProcBuff,0,PATCH_LENGTH*sizeof(int16_t));
 
-	/* Audio Preprocessing init */
-	PreProc_DPUInit(&AudioCtx->AudioPreProcCtx);
 
-	/* Audio Postprocessing init */
-	PostProc_DPUInit(&AudioCtx->AudioPostProcCtx);
 
-	/* transfer quantization parametres included in AI model to the Audio DPU   */
-	AudioCtx->AudioPreProcCtx.output_Q_offset    = AudioCtx->AICtx.input_Q_offset;
-	AudioCtx->AudioPreProcCtx.output_Q_inv_scale =
-			(PREPROC_FLOAT_T) AudioCtx->AICtx.input_Q_inv_scale;
-	AudioCtx->AudioPreProcCtx.quant.output_Q_inv_scale = AudioCtx->AudioPreProcCtx.output_Q_inv_scale;
-	AudioCtx->AudioPreProcCtx.quant.output_Q_offset = AudioCtx->AudioPreProcCtx.output_Q_offset;
-
-	AudioCtx->AcqIndex = 0;
-	memset(AudioCtx->OvlSamples, 0, AUDIO_ACQ_OFFSET*sizeof(int16_t));
-}
-
-/**
- * @brief  external memories configuration (Flash & RAM).
- * @param  None.
- * @retval None.
- */
-static void Ext_Mem_Config(void)
-{
-	BSP_XSPI_NOR_Init_t Flash;
-	Flash.InterfaceMode = MX66UW1G45G_OPI_MODE;
-	Flash.TransferRate = MX66UW1G45G_DTR_TRANSFER;
-
-	if(BSP_XSPI_NOR_Init(0, &Flash) != BSP_ERROR_NONE)
-	{
-		__BKPT(0);
-	}
-	BSP_XSPI_NOR_EnableMemoryMappedMode(0);
-	MODIFY_REG(XSPI2->CR, XSPI_CR_NOPREF, HAL_XSPI_AUTOMATIC_PREFETCH_DISABLE); /* Hotfix for xspi: no prefetch */
-
-#ifdef USE_EXT_SRAM
-	BSP_XSPI_RAM_Init(0);
-	BSP_XSPI_RAM_EnableMemoryMappedMode(0);
-	MODIFY_REG(XSPI1->CR, XSPI_CR_NOPREF, HAL_XSPI_AUTOMATIC_PREFETCH_DISABLE); /* Hotfix for xspi: no prefetch */
-#endif
-}
 
 
 

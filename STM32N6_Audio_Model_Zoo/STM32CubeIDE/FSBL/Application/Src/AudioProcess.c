@@ -4,54 +4,52 @@
  *  Created on: Oct 16, 2025
  *      Author: adamg
  */
+#include "AudioMain.h"
 #include "AudioProcess.h"
 
-#include "preproc_dpu.h"                           /* Preprocessing includes  */
-#include "postproc_dpu.h"                          /* Postprocessing includes */
+#include "arm_math.h"
 
-void AudioProcess(int16_t *AudioInBuffer, int16_t *AudioOutBuffer, AudioCtx_t *AudioCtx)
+extern LowPass_FirstOrder LPFilter;
+
+extern arm_rfft_fast_instance_f32 fftHandler;
+extern float32_t fftInBuffer[FFT_BUFFER_SIZE];
+extern float32_t fftOutBuffer[FFT_BUFFER_SIZE];
+extern uint8_t fftFlag;
+
+void AudioProcess(int16_t *AudioInBuffer, int16_t *AudioOutBuffer)
 {
-	uint8_t *ProcBuff = (uint8_t *) AudioCtx->ProcBuff;
-	uint8_t *ProcBuffOvl = (uint8_t *) (&AudioCtx->ProcBuff[AUDIO_ACQ_LEN]);
-	uint8_t *AcqBuff = (uint8_t *) (&AudioCtx->ProcBuff[AUDIO_ACQ_OFFSET]);
+	float32_t SampleIn;
+	float32_t SampleProcessed;
+	int16_t SampleOut;
 
-	/* Audio samples acquisition */
-	for (int32_t i = 0; i < AUDIO_BUFFER_SIZE; i++)
+	static int16_t fftIndex = 0;
+
+	for(uint32_t SampleIndex = 0; SampleIndex < (AUDIO_BUFFER_SIZE/2); SampleIndex++)
 	{
-		AcqBuff[AudioCtx->AcqIndex] = AudioInBuffer[i];
-		AudioCtx->AcqIndex++;
-	}
-	for (int32_t i = 0; i < AUDIO_BUFFER_SIZE; i++)
-	{
-		AudioOutBuffer[i] = AudioCtx->AudioOut[AudioCtx->PlaybackIndex];
-		AudioCtx->PlaybackIndex++;
-	}
-
-	assert(AudioCtx->AcqIndex <= AUDIO_ACQ_LEN);
-
-	if(AudioCtx->AcqIndex == AUDIO_ACQ_LEN)
-	{
-
-		/* prepare overlapping samples from previous patch */
-		memcpy(ProcBuff,AudioCtx->OvlSamples,AUDIO_ACQ_OFFSET*sizeof(int16_t));
+		SampleIn = ((float32_t)AudioInBuffer[SampleIndex]) / 32768.0f;
 
 
-		/* Audio pre processing */
-		PreProc_DPU(&AudioCtx->AudioPreProcCtx, ProcBuff, AudioCtx->AIInPtr );
+		SampleProcessed = LowPass_FirstOrder_Update(&LPFilter, SampleIn);
+		//sample_processed = sample_in;
 
-		/* AI processing */
-		AiDPUProcess(&AudioCtx->AICtx);
+		// Fill fft buffer
+		fftInBuffer[fftIndex] = SampleProcessed;
+		fftIndex++;
 
-		/* Audio post processing */
-		PostProc_DPU(&AudioCtx->AudioPostProcCtx,
-				AudioCtx->AudioPreProcCtx.pCplxSpectrum,
-				(float32_t *) LL_Buffer_addr_start(AudioCtx->AIOutPtr),
-				AudioCtx->AudioOut);
+		if(fftIndex == FFT_BUFFER_SIZE)
+		{
+			arm_rfft_fast_f32(&fftHandler, fftInBuffer, fftOutBuffer, 0);
 
-		/* prepare overlapping samples for next patch */
-		memcpy(AudioCtx->OvlSamples,ProcBuffOvl,AUDIO_ACQ_OFFSET*sizeof(int16_t));
-		AudioCtx->AcqIndex = 0;
-		AudioCtx->PlaybackIndex = 0;
+			fftFlag = 1;
+
+			fftIndex = 0;
+		}
+
+
+
+		SampleOut = (int16_t)(SampleProcessed * 32768.0f);
+		AudioOutBuffer[SampleIndex] = SampleOut;
+
 	}
 }
 
