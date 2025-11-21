@@ -8,11 +8,4 @@
 #ifndef APPLICATION_INC_AUDIO_PROCESS_H_
 #define APPLICATION_INC_AUDIO_PROCESS_H_
 
-#include "LowPass_FirstOrder.h"
-#include "stdint.h"
-
-#define AUDIO_BUFFER_SIZE 128
-
-void AudioProcess(int16_t *AudioInBuffer, int16_t *AudioOutBuffer);
-
 #endif /* APPLICATION_INC_AUDIO_PROCESS_H_ */

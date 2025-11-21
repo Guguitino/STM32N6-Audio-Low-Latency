@@ -22,10 +22,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "AudioMain.h"
+
 #include "stm32n6570_discovery.h"
-#include "stm32n6570_discovery_bus.h"
-#include "wm8904.h"
-#include "audio.h"
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,9 +66,6 @@ UART_HandleTypeDef huart1;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel6;
 
-static AUDIO_Drv_t *Audio_Drv = NULL;
-static void *Audio_CompObj;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -82,8 +79,7 @@ static void MX_SAI1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void SystemIsolation_Config(void);
 /* USER CODE BEGIN PFP */
-static void WM8904_Probe(void);
-static void Playback_Init(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -99,7 +95,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	AudioMainInit();
+
   /* USER CODE END 1 */
 
   /* Enable the CPU Cache */
@@ -114,7 +110,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  AudioMainInit();
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -136,7 +132,6 @@ int main(void)
   MX_USART1_UART_Init();
   SystemIsolation_Config();
   /* USER CODE BEGIN 2 */
-  Playback_Init();
   AudioMain();
   /* USER CODE END 2 */
 
@@ -580,69 +575,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-/**
- * @brief  Probe the WM8904 audio codec.
- * @param  None
- * @retval None
- */
-static void WM8904_Probe(void)
-{
-	WM8904_IO_t              IOCtx;
-	uint32_t                 wm8904_id;
-	static WM8904_Object_t   WM8904Obj;
-
-	/* Configure the audio driver */
-	IOCtx.Address     = 0x34U;
-	IOCtx.Init        = BSP_I2C2_Init;
-	IOCtx.DeInit      = BSP_I2C2_DeInit;
-	IOCtx.ReadReg     = BSP_I2C2_ReadReg;
-	IOCtx.WriteReg    = BSP_I2C2_WriteReg;
-	IOCtx.GetTick     = BSP_GetTick;
-
-	if (WM8904_RegisterBusIO(&WM8904Obj, &IOCtx) != WM8904_OK)
-	{
-		Error_Handler();
-	}
-	else if (WM8904_ReadID(&WM8904Obj, &wm8904_id) != WM8904_OK)
-	{
-		Error_Handler();
-	}
-	else if ((wm8904_id & WM8904_ID_MASK) != WM8904_ID)
-	{
-		Error_Handler();
-	}
-	else
-	{
-		Audio_Drv = (AUDIO_Drv_t *) &WM8904_Driver;
-		Audio_CompObj = &WM8904Obj;
-	}
-}
-
-static void Playback_Init(void)
-{
-	/* Probe the audio codec */
-	WM8904_Probe();
-
-	/* Initialize SAI peripheral */
-	//MX_SAI1_Init();
-
-	/* Initialize audio codec */
-	WM8904_Init_t codec_init;
-	codec_init.InputDevice  = WM8904_IN_NONE;
-	codec_init.OutputDevice = WM8904_OUT_HEADPHONE;
-	codec_init.Resolution   = WM8904_RESOLUTION_16B;
-	codec_init.Frequency    = WM8904_FREQUENCY_16K;
-	codec_init.Volume       = 80U;
-	if (Audio_Drv->Init(Audio_CompObj, &codec_init) < 0)
-	{
-		Error_Handler();
-	}
-	if (Audio_Drv->Play(Audio_CompObj) != 0)
-	{
-		Error_Handler();
-	}
-}
-
 
 /* USER CODE END 4 */
 

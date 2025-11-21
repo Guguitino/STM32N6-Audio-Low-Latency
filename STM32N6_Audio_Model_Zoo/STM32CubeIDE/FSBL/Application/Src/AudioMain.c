@@ -8,10 +8,16 @@
 
 /* USER CODE BEGIN Includes */
 #include "main.h"
+#include "stm32n6xx_hal_ramcfg.h"
 #include "AudioProcess.h"
 #include "TimerUtils.h"
 #include "stm32n6570_discovery.h"
+#include "stm32n6570_discovery_bus.h"
 #include "logging.h"
+#include "misc_toolbox.h"
+#include "wm8904.h"
+#include "audio.h"
+#include "LowPass_FirstOrder.h"
 
 #include "arm_math.h"
 #include <stdio.h>
@@ -29,20 +35,20 @@ extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 
 extern TIM_HandleTypeDef htim6;
 
+static AUDIO_Drv_t *Audio_Drv = NULL;
+static void *Audio_CompObj;
+
 static __IO uint32_t CaptureHalfBufferCpltFlag;
 static __IO uint32_t CaptureBufferCpltFlag;
 
 static int16_t CaptureBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
 static int16_t PlaybackBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
 
+AudioAcqCtx_t AudioAcqCtx;
+AudioPlayBackCtx_t AudioPlayBackCtx;
+AudioProcCtx_t AudioProcCtx;
+
 LowPass_FirstOrder LPFilter;
-
-arm_rfft_fast_instance_f32 fftHandler;
-float32_t fftInBuffer[FFT_BUFFER_SIZE];
-float32_t fftOutBuffer[FFT_BUFFER_SIZE];
-
-uint8_t fftFlag = 0;
-
 
 extern void SystemClock_Config(void);
 extern void PeriphCommonClock_Config(void);
@@ -51,11 +57,29 @@ extern void MX_GPDMA1_Init(void);
 extern void MX_MDF1_Init(void);
 extern void SystemIsolation_Config(void);
 
+static void AudioProcess(AudioAcqCtx_t *AudioAcqCtx, AudioProcCtx_t *AudioProcCtx, AudioPlayBackCtx_t *AudioPlayBackCtx);
+static void Int_Mem_Config(void);
+static void Ext_Mem_Config(void);
+static void IAC_Config(void);
 static void MPU_Config(void);
+static void WM8904_Probe(void);
+static void Playback_Init(void);
+static void InitAudioCapture(AudioAcqCtx_t *AudioAcqCtx);
+static void InitAudioPlayback(AudioPlayBackCtx_t *AudioPlayBackCtx);
+void InitAudioProc(AudioProcCtx_t *AudioProcCtx);
+void displaySystemSetting(void);
+static void NPU_SettingsLog(void);
 
 void AudioMainInit(void)
 {
+	  /* Power on ICACHE */
+	  MEMSYSCTL->MSCR |= MEMSYSCTL_MSCR_ICACTIVE_Msk;
+
 	MPU_Config();
+	Int_Mem_Config(); //MX -> RAMCFG ?
+	Ext_Mem_Config(); //MX -> XSPI2 classic configuration ?
+	NPU_Config();
+	IAC_Config();
 
 	if (BSP_ERROR_NONE != BSP_LED_Init(LED_RED))
 	{
@@ -65,6 +89,8 @@ void AudioMainInit(void)
 	{
 		Error_Handler();
 	}
+
+	displaySystemSetting();
 }
 
 void AudioMain(void)
@@ -73,12 +99,17 @@ void AudioMain(void)
 	TimCtx6.htim = &htim6;
 	TimInit(&TimCtx6);
 
-	MDF_DmaConfigTypeDef dma_config;
-
 	/* Start record */
 	CaptureHalfBufferCpltFlag = 0;
 	CaptureBufferCpltFlag = 0;
 
+	InitAudioCapture(&AudioAcqCtx);
+	InitAudioProc(&AudioProcCtx);
+	InitAudioPlayback(&AudioPlayBackCtx);
+
+	Playback_Init();
+
+	MDF_DmaConfigTypeDef dma_config;
 	dma_config.Address    = (uint32_t)&CaptureBuffer[0];
 	dma_config.DataLength = AUDIO_BUFFER_SIZE * sizeof(int16_t);
 	dma_config.MsbOnly    = ENABLE;
@@ -101,20 +132,6 @@ void AudioMain(void)
 
 	LowPass_FirstOrder_Init(&LPFilter, 1000.0f, (float32_t)AUDIO_FREQUENCY);
 
-	/* Time measurement demo */
-	ExecTimeMeasurement_t TestMes;
-	TestMes.TimCtx = &TimCtx6;
-	ExecTimeMeasurementStart(&TestMes);
-	HAL_Delay(50);
-	ExecTimeMeasurementStop(&TestMes);
-
-	print("Time measured : %f ms\r\n", TestMes.TimeElapsed_ms);
-
-	/* Initialize FFT */
-	arm_rfft_fast_init_f32(&fftHandler, FFT_BUFFER_SIZE);
-	float32_t peakVal = 0.0f;
-	uint16_t peakHz = 0;
-
 	/* Initialize non blocking delay for the led */
 	NBDelay_t LedDelay = {};
 	LedDelay.TimCtx = &TimCtx6;
@@ -123,35 +140,14 @@ void AudioMain(void)
 	while (1)
 	{
 
-
-		if(fftFlag)
-		{
-			peakVal = 0.0f;
-			peakHz = 0.0f;
-
-			uint16_t freqIndex = 0;
-			for(uint16_t Index = 0;Index < FFT_BUFFER_SIZE; Index += 2)
-			{
-				float32_t curVal = sqrtf((fftOutBuffer[Index] * fftOutBuffer[Index]) + (fftOutBuffer[Index + 1] + fftOutBuffer[Index + 1]));
-
-				if (curVal > peakVal)
-				{
-					peakVal = curVal;
-					peakHz = (uint16_t) (freqIndex * AUDIO_FREQUENCY/ ((float32_t)FFT_BUFFER_SIZE));
-				}
-				freqIndex++;
-			}
-			fftFlag = 0;
-
-			//print("%d\r\n", peakHz);
-		}
-
 		if(CaptureHalfBufferCpltFlag == 1)
 		{
 			int16_t *AudioInBuffer = &CaptureBuffer[0];
 			int16_t *AudioOutBuffer = &PlaybackBuffer[0];
 
-			AudioProcess(AudioInBuffer, AudioOutBuffer);
+			AudioCapture_ring_buff_feed(&AudioAcqCtx.ring_buff, (uint8_t *)AudioInBuffer, AUDIO_BUFFER_SIZE/2);
+			AudioCapture_ring_buff_consume((uint8_t *)AudioOutBuffer, &AudioPlayBackCtx.ring_buff, AUDIO_BUFFER_SIZE/2);
+
 			CaptureHalfBufferCpltFlag  = 0;
 
 		}
@@ -160,25 +156,107 @@ void AudioMain(void)
 			int16_t *AudioInBuffer = &CaptureBuffer[AUDIO_BUFFER_SIZE/2];
 			int16_t *AudioOutBuffer = &PlaybackBuffer[AUDIO_BUFFER_SIZE/2];
 
-			AudioProcess(AudioInBuffer, AudioOutBuffer);
+			AudioCapture_ring_buff_feed(&AudioAcqCtx.ring_buff, (uint8_t *)AudioInBuffer, AUDIO_BUFFER_SIZE/2);
+			AudioCapture_ring_buff_consume((uint8_t *)AudioOutBuffer, &AudioPlayBackCtx.ring_buff, AUDIO_BUFFER_SIZE/2);
+
 			CaptureBufferCpltFlag = 0;
+		}
+
+		if (AudioAcqCtx.ring_buff.availableSamples >= AUDIO_ACQ_LEN)
+		{
+			AudioProcess(&AudioAcqCtx, &AudioProcCtx, &AudioPlayBackCtx);
 		}
 
 		if(NBDelayHasRunOut(&LedDelay))
 		{
-//			ExecTimeMeasurementStart(&TestMes);
-//			print("Ceci est la ligne 1\r\n");
-//			ExecTimeMeasurementStop(&TestMes);
-//			print("Time measured : %f ms\r\n", TestMes.TimeElapsed_ms);
 			BSP_LED_Toggle(LED_GREEN);
 		}
 	}
 
 }
 
+static void AudioProcess(AudioAcqCtx_t *AudioAcqCtx, AudioProcCtx_t *AudioProcCtx, AudioPlayBackCtx_t *AudioPlayBackCtx)
+{
+	uint8_t *ProcBuffer = (uint8_t *) AudioProcCtx->ProcBuffer;
+	uint8_t *ProcBufferOvl = (uint8_t *) (&AudioProcCtx->ProcBuffer[AUDIO_ACQ_LEN]);
+	uint8_t *AcqBuffer = (uint8_t *) (&AudioProcCtx->ProcBuffer[AUDIO_ACQ_OFFSET]);
 
+	/* prepare overlapping samples from previous patch */
+	memcpy(ProcBuffer, ProcBufferOvl, AUDIO_ACQ_OFFSET*sizeof(int16_t));
 
-void MPU_Config(void)
+	AudioCapture_ring_buff_consume(AcqBuffer, &AudioAcqCtx->ring_buff, AUDIO_ACQ_LEN);
+
+	/* Audio pre processing */
+	PreProc_DPU(&AudioProcCtx->AudioPreCtx, ProcBuffer, AudioProcCtx->AIInputPtr );
+
+	/* AI processing */
+	AiDPUProcess(&AudioProcCtx->AICtx);
+
+	PostProc_DPU(&AudioProcCtx->AudioPostCtx, AudioProcCtx->AudioPreCtx.pCplxSpectrum,
+			(float32_t *) LL_Buffer_addr_start(AudioProcCtx->AIOutputPtr), AudioProcCtx->AudioOut);
+
+	AudioCapture_ring_buff_feed(&AudioPlayBackCtx->ring_buff, &AudioProcCtx->AudioOut[AUDIO_OUT_FIRST], AUDIO_ACQ_LEN);
+}
+
+static void Int_Mem_Config(void)
+{
+  RAMCFG_HandleTypeDef hramcfg = {0};
+
+  __HAL_RCC_SYSCFG_CLK_ENABLE();
+  __HAL_RCC_CRC_CLK_ENABLE();
+
+  RCC->MEMENR |= RCC_MEMENR_AXISRAM3EN | RCC_MEMENR_AXISRAM4EN | RCC_MEMENR_AXISRAM5EN | RCC_MEMENR_AXISRAM6EN;
+  RCC->MEMENR |= RCC_MEMENR_CACHEAXIRAMEN;
+  hramcfg.Instance =  RAMCFG_SRAM2_AXI;
+  HAL_RAMCFG_EnableAXISRAM(&hramcfg);
+  hramcfg.Instance =  RAMCFG_SRAM3_AXI;
+  HAL_RAMCFG_EnableAXISRAM(&hramcfg);
+  hramcfg.Instance =  RAMCFG_SRAM4_AXI;
+  HAL_RAMCFG_EnableAXISRAM(&hramcfg);
+  hramcfg.Instance =  RAMCFG_SRAM5_AXI;
+  HAL_RAMCFG_EnableAXISRAM(&hramcfg);
+  hramcfg.Instance =  RAMCFG_SRAM6_AXI;
+  HAL_RAMCFG_EnableAXISRAM(&hramcfg);
+
+  __HAL_RCC_CACHEAXIRAM_MEM_CLK_ENABLE();
+  __HAL_RCC_AXISRAM2_MEM_CLK_ENABLE();
+  __HAL_RCC_AXISRAM3_MEM_CLK_ENABLE();
+  __HAL_RCC_AXISRAM4_MEM_CLK_ENABLE();
+  __HAL_RCC_AXISRAM5_MEM_CLK_ENABLE();
+  __HAL_RCC_AXISRAM6_MEM_CLK_ENABLE();
+
+  /* Allow caches to be activated. Default value is 1, but the current boot sets it to 0 */
+  MEMSYSCTL->MSCR |= MEMSYSCTL_MSCR_DCACTIVE_Msk | MEMSYSCTL_MSCR_ICACTIVE_Msk;
+}
+
+/**
+* @brief  external memories configuration (Flash & RAM).
+* @param  None.
+* @retval None.
+*/
+static void Ext_Mem_Config(void)
+{
+  BSP_XSPI_NOR_Init_t Flash;
+  Flash.InterfaceMode = MX66UW1G45G_OPI_MODE;
+  Flash.TransferRate = MX66UW1G45G_DTR_TRANSFER;
+
+  if(BSP_XSPI_NOR_Init(0, &Flash) != BSP_ERROR_NONE)
+  {
+    __BKPT(0);
+  }
+  BSP_XSPI_NOR_EnableMemoryMappedMode(0);
+  MODIFY_REG(XSPI2->CR, XSPI_CR_NOPREF, HAL_XSPI_AUTOMATIC_PREFETCH_DISABLE); /* Hotfix for xspi: no prefetch */
+}
+
+static void IAC_Config(void)
+{
+/* Configure IAC to trap illegal access events */
+  __HAL_RCC_IAC_CLK_ENABLE();
+  __HAL_RCC_IAC_FORCE_RESET();
+  __HAL_RCC_IAC_RELEASE_RESET();
+}
+
+static void MPU_Config(void)
 {
 	MPU_Region_InitTypeDef default_config = {0};
 	MPU_Attributes_InitTypeDef attr_config = {0};
@@ -213,124 +291,68 @@ void MPU_Config(void)
 	__set_PRIMASK(primask_bit);
 }
 
-///**
-// * @brief  Probe the WM8904 audio codec.
-// * @param  None
-// * @retval None
-// */
-//static void WM8904_Probe(void)
-//{
-//	WM8904_IO_t              IOCtx;
-//	uint32_t                 wm8904_id;
-//	static WM8904_Object_t   WM8904Obj;
-//
-//	/* Configure the audio driver */
-//	IOCtx.Address     = 0x34U;s
-//	IOCtx.Init        = BSP_I2C2_Init;
-//	IOCtx.DeInit      = BSP_I2C2_DeInit;
-//	IOCtx.ReadReg     = BSP_I2C2_ReadReg;
-//	IOCtx.WriteReg    = BSP_I2C2_WriteReg;
-//	IOCtx.GetTick     = BSP_GetTick;
-//
-//	if (WM8904_RegisterBusIO(&WM8904Obj, &IOCtx) != WM8904_OK)
-//	{
-//		Error_Handler();
-//	}
-//	else if (WM8904_ReadID(&WM8904Obj, &wm8904_id) != WM8904_OK)
-//	{
-//		Error_Handler();
-//	}
-//	else if ((wm8904_id & WM8904_ID_MASK) != WM8904_ID)
-//	{
-//		Error_Handler();
-//	}
-//	else
-//	{
-//		Audio_Drv = (AUDIO_Drv_t *) &WM8904_Driver;
-//		Audio_CompObj = &WM8904Obj;
-//	}
-//}
-//
-///**
-// * @brief SAI1 Initialization Function
-// * @param None
-// * @retval None
-// */
-//static void MX_SAI1_Init(void)
-//{
-//
-//	/* USER CODE BEGIN SAI1_Init 0 */
-//
-//	/* USER CODE END SAI1_Init 0 */
-//
-//	/* USER CODE BEGIN SAI1_Init 1 */
-//
-//	/* USER CODE END SAI1_Init 1 */
-//	hsai_BlockA1.Instance = SAI1_Block_A;
-//	hsai_BlockA1.Init.Protocol = SAI_FREE_PROTOCOL;
-//	hsai_BlockA1.Init.AudioMode = SAI_MODEMASTER_TX;
-//	hsai_BlockA1.Init.DataSize = SAI_DATASIZE_16;
-//	hsai_BlockA1.Init.FirstBit = SAI_FIRSTBIT_MSB;
-//	hsai_BlockA1.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
-//	hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
-//	hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_ENABLE;
-//	hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
-//	hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_1QF;
-//	hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_16K;
-//	hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
-//	hsai_BlockA1.Init.MckOutput = SAI_MCK_OUTPUT_ENABLE;
-//	hsai_BlockA1.Init.MonoStereoMode = SAI_MONOMODE;
-//	hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
-//	hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
-//	hsai_BlockA1.Init.PdmInit.Activation = DISABLE;
-//	hsai_BlockA1.FrameInit.FrameLength = 32;
-//	hsai_BlockA1.FrameInit.ActiveFrameLength = 16;
-//	hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_CHANNEL_IDENTIFICATION;
-//	hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
-//	hsai_BlockA1.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
-//	hsai_BlockA1.SlotInit.FirstBitOffset = 0;
-//	hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_16B;
-//	hsai_BlockA1.SlotInit.SlotNumber = 2;
-//	hsai_BlockA1.SlotInit.SlotActive = SAI_SLOTACTIVE_0 | SAI_SLOTACTIVE_1;
-//	if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
-//	{
-//		Error_Handler();
-//	}
-//	/* USER CODE BEGIN SAI1_Init 2 */
-//
-//	/* USER CODE END SAI1_Init 2 */
-//
-//}
-//
-///**
-// * @brief  Playback initialization
-// * @param  None
-// * @retval None
-// */
-//static void Playback_Init(void)
-//{
-//	/* Probe the audio codec */
-//	WM8904_Probe();
-//
-//	/* Initialize SAI peripheral */
-//	MX_SAI1_Init();
-//
-//	/* Initialize audio codec */
-//	WM8904_Init_t codec_init;
-//	codec_init.InputDevice  = WM8904_IN_NONE;
-//	codec_init.OutputDevice = WM8904_OUT_HEADPHONE;
-//	codec_init.Resolution   = WM8904_RESOLUTION_16B;
-//	codec_init.Frequency    = WM8904_FREQUENCY_16K;
-//	codec_init.Volume       = 80U;
-//	if (Audio_Drv->Init(Audio_CompObj, &codec_init) < 0)
-//	{
-//		Error_Handler();
-//	}
-//	if (Audio_Drv->Play(Audio_CompObj) != 0)
-//	{
-//		Error_Handler();
-//	}
-//}
+/**
+ * @brief  Probe the WM8904 audio codec.
+ * @param  None
+ * @retval None
+ */
+static void WM8904_Probe(void)
+{
+	WM8904_IO_t              IOCtx;
+	uint32_t                 wm8904_id;
+	static WM8904_Object_t   WM8904Obj;
+
+	/* Configure the audio driver */
+	IOCtx.Address     = 0x34U;
+	IOCtx.Init        = BSP_I2C2_Init;
+	IOCtx.DeInit      = BSP_I2C2_DeInit;
+	IOCtx.ReadReg     = BSP_I2C2_ReadReg;
+	IOCtx.WriteReg    = BSP_I2C2_WriteReg;
+	IOCtx.GetTick     = BSP_GetTick;
+
+	if (WM8904_RegisterBusIO(&WM8904Obj, &IOCtx) != WM8904_OK)
+	{
+		Error_Handler();
+	}
+	else if (WM8904_ReadID(&WM8904Obj, &wm8904_id) != WM8904_OK)
+	{
+		Error_Handler();
+	}
+	else if ((wm8904_id & WM8904_ID_MASK) != WM8904_ID)
+	{
+		Error_Handler();
+	}
+	else
+	{
+		Audio_Drv = (AUDIO_Drv_t *) &WM8904_Driver;
+		Audio_CompObj = &WM8904Obj;
+	}
+}
+
+static void Playback_Init(void)
+{
+	/* Probe the audio codec */
+	WM8904_Probe();
+
+	/* Initialize SAI peripheral */
+	//MX_SAI1_Init();
+
+	/* Initialize audio codec */
+	WM8904_Init_t codec_init;
+	codec_init.InputDevice  = WM8904_IN_NONE;
+	codec_init.OutputDevice = WM8904_OUT_HEADPHONE;
+	codec_init.Resolution   = WM8904_RESOLUTION_16B;
+	codec_init.Frequency    = WM8904_FREQUENCY_16K;
+	codec_init.Volume       = 80U;
+	if (Audio_Drv->Init(Audio_CompObj, &codec_init) < 0)
+	{
+		Error_Handler();
+	}
+	if (Audio_Drv->Play(Audio_CompObj) != 0)
+	{
+		Error_Handler();
+	}
+}
 
 /**
  * @brief  MDF acquisition complete callback.
@@ -364,8 +386,83 @@ void HAL_MDF_AcqHalfCpltCallback(MDF_HandleTypeDef *hmdf)
 //    return len;
 //}
 
+static void InitAudioCapture(AudioAcqCtx_t *AudioAcqCtx)
+{
+	AudioAcqCtx->ring_buff.nbSamples = ((PATCH_LENGTH / AUDIO_BUFFER_SIZE) + 1 ) \
+			* AUDIO_BUFFER_SIZE ;
+	AudioAcqCtx->ring_buff.readSampleIndex  = 0 ;
+	AudioAcqCtx->ring_buff.writeSampleIndex = 0 ;
+	AudioAcqCtx->ring_buff.nbBytesPerSample = 2;
+	AudioAcqCtx->ring_buff.nbFrames = 2;
 
+	AudioCapture_ring_buff_alloc(&AudioAcqCtx->ring_buff);
+}
 
+static void InitAudioPlayback(AudioPlayBackCtx_t *AudioPlayBackCtx)
+{
+	AudioPlayBackCtx->ring_buff.nbSamples = PATCH_LENGTH * 4;
+	AudioPlayBackCtx->ring_buff.readSampleIndex  = 0 ;
+	AudioPlayBackCtx->ring_buff.writeSampleIndex = 0 ;
+	AudioPlayBackCtx->ring_buff.nbFrames = 1;
+	AudioPlayBackCtx->ring_buff.nbBytesPerSample = 2;
+
+	AudioCapture_ring_buff_alloc(&AudioPlayBackCtx->ring_buff);
+}
+
+/**
+ * @brief  Initializes all Audio processing
+ * @param  proc_ctx_ptr pointer to processing context
+ * @retval None
+ */
+void InitAudioProc(AudioProcCtx_t *AudioProcCtx)
+{
+  struct npu_model_info *pxInfo;
+
+  /* get the AI model */
+  AiDPULoadModel( &AudioProcCtx->AICtx, CTRL_X_CUBE_AI_MODEL_NAME );
+  pxInfo     = &AudioProcCtx->AICtx.net_exec_ctx->info;
+  AudioProcCtx->AIInputPtr = (int8_t *) LL_Buffer_addr_start(pxInfo->in_bufs[0]);
+  AudioProcCtx->AIOutputPtr = pxInfo->out_bufs[0] ;
+
+  /* clear input samples array ( get silence on first overlayed patch */
+  memset(AudioProcCtx->ProcBuffer,0,PATCH_LENGTH*sizeof(int16_t));
+  /* Audio Preprocessing init */
+  PreProc_DPUInit(&AudioProcCtx->AudioPreCtx);
+  /* Audio Postprocessing init */
+  PostProc_DPUInit(&AudioProcCtx->AudioPostCtx);
+  /* transfer quantization parametres included in AI model to the Audio DPU   */
+  AudioProcCtx->AudioPreCtx.output_Q_offset    = AudioProcCtx->AICtx.input_Q_offset;
+  AudioProcCtx->AudioPreCtx.output_Q_inv_scale =
+            (PREPROC_FLOAT_T) AudioProcCtx->AICtx.input_Q_inv_scale;
+  AudioProcCtx->AudioPreCtx.quant.output_Q_inv_scale = AudioProcCtx->AudioPreCtx.output_Q_inv_scale;
+  AudioProcCtx->AudioPreCtx.quant.output_Q_offset = AudioProcCtx->AudioPreCtx.output_Q_offset;
+  //AudioProcCtx->cnt = 0;
+}
+
+/**
+* @brief  Displays System Settings
+* @param  None
+* @retval None
+*/
+void displaySystemSetting(void)
+{
+  my_printf("\n\r");
+  my_printf(SEPARATION_LINE);
+  my_printf("        System configuration (%s)\n\r",APP_CONF_STR);
+  my_printf(SEPARATION_LINE);
+  printf("\n\rLog Level: %s\n\n\r", getLogLevelStr(LOG_LEVEL));
+  systemSettingLog();
+  NPU_SettingsLog();
+}
+
+static void NPU_SettingsLog(void)
+{
+    struct mcu_conf sys_conf;
+    getSysConf(&sys_conf);
+    my_printf("\n\rNPU Runtime configuration...\r\n");
+    my_printf(" NPU clock    : %u MHz\r\n", (int)sys_conf.extra[1]/1000000);
+    my_printf(" NIC clock    : %u MHz\r\n", (int)sys_conf.extra[2]/1000000);
+}
 
 
 

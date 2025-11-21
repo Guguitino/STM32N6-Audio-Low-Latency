@@ -88,7 +88,7 @@ git clone --recursive https://github.com/STMicroelectronics/STM32CubeN6.git
     - Delete all unused folders (The CubeIDE's project explorer view can be refreshed with F5)
     - For each folder kept :
       - Open the file with the same name of the folder and its f16 version
-      - Comment all the file (Ctrl+Shift+C to comment selection on CubeIDE)
+      - Comment every include in these files (Ctrl+Shift+C to comment selection on CubeIDE)
       - Save files
       - The folder `CommonTables/` can be required by other component of the library (e.g. `TransfomFunction/`)
 
@@ -251,7 +251,7 @@ In the project properties $\rightarrow$ MCU/MPU GCC Compiler $\rightarrow$ Prepr
 - `LL_ATON_PLATFORM=LL_ATON_PLAT_STM32N6`
 - `LL_ATON_OSAL=LL_ATON_OSAL_BARE_METAL`
 - `LL_ATON_RT_MODE=LL_ATON_RT_ASYNC`
-- `LL_ATON_SW_FALLBACK`
+- `LL_ATON_SW_FALLBACK=1`
 - `LL_ATON_EB_DBG_INFO`
 - `LL_ATON_DUMP_DEBUG_API`
 - `LL_ATON_DBG_BUFFER_INFO_EXCLUDED=1`

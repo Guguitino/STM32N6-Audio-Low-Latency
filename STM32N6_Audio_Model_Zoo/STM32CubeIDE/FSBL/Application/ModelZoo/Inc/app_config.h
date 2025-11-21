@@ -57,7 +57,7 @@
 #ifdef APP_DVFS
   #define USE_UART_BAUDRATE               (9600) /* 14400 is max value in DVFS mode */
 #else
-  #define USE_UART_BAUDRATE               (9600) /* can up set up upto 921600 */
+  #define USE_UART_BAUDRATE               (115000) /* can up set up upto 921600 */
 #endif
 
 #ifdef APP_BARE_METAL
