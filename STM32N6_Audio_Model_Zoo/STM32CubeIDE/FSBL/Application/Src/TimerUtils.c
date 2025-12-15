@@ -56,7 +56,12 @@ void ExecTimeMeasurementStop(ExecTimeMeasurement_t *mes)
 {
 	TIM_HandleTypeDef *htim = mes->TimCtx->htim;
 	mes->TimCountStop = __HAL_TIM_GetCounter(htim);
-	mes->TimeElapsed_ms = ((float32_t)mes->TimCountStop - (float32_t)mes->TimCountStart) * mes->TimCtx->IncrementPeriod_ms;
+	float32_t CountDiff = (float32_t)mes->TimCountStop - (float32_t)mes->TimCountStart;
+	if(CountDiff < 0)
+	{
+		CountDiff += mes->TimCtx->CounterPeriod;
+	}
+	mes->TimeElapsed_ms = CountDiff * mes->TimCtx->IncrementPeriod_ms;
 }
 
 void NBDelayInit(NBDelay_t *Delay, int32_t Delay_ms)

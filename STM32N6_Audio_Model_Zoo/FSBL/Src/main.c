@@ -22,7 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "AudioMain.h"
-
+#include "misc_toolbox.h"
 #include "stm32n6570_discovery.h"
 
 
@@ -45,12 +45,18 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CACHEAXI_HandleTypeDef hcacheaxi;
 
 MDF_HandleTypeDef MdfHandle0;
 MDF_FilterConfigTypeDef MdfFilterConfig0;
 DMA_NodeTypeDef Node_GPDMA1_Channel6 __NON_CACHEABLE;
 DMA_QListTypeDef List_GPDMA1_Channel6;
 DMA_HandleTypeDef handle_GPDMA1_Channel6;
+
+RAMCFG_HandleTypeDef hramcfg_SRAM3;
+RAMCFG_HandleTypeDef hramcfg_SRAM4;
+RAMCFG_HandleTypeDef hramcfg_SRAM5;
+RAMCFG_HandleTypeDef hramcfg_SRAM6;
 
 SAI_HandleTypeDef hsai_BlockA1;
 DMA_NodeTypeDef Node_GPDMA1_Channel0 __NON_CACHEABLE;
@@ -60,6 +66,8 @@ DMA_HandleTypeDef handle_GPDMA1_Channel0;
 TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart1;
+
+XSPI_HandleTypeDef hxspi2;
 
 /* USER CODE BEGIN PV */
 
@@ -77,6 +85,9 @@ static void MX_MDF1_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_SAI1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_CACHEAXI_Init(void);
+static void MX_RAMCFG_Init(void);
+static void MX_XSPI2_Init(void);
 static void SystemIsolation_Config(void);
 /* USER CODE BEGIN PFP */
 
@@ -95,7 +106,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* Enable the CPU Cache */
@@ -110,7 +120,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  AudioMainInit();
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -130,8 +140,17 @@ int main(void)
   MX_TIM6_Init();
   MX_SAI1_Init();
   MX_USART1_UART_Init();
+  MX_CACHEAXI_Init();
+  MX_RAMCFG_Init();
+  MX_XSPI2_Init();
   SystemIsolation_Config();
   /* USER CODE BEGIN 2 */
+  AudioMainInit();
+	if (BSP_ERROR_NONE != BSP_PB_Init(BUTTON_USER1, BUTTON_MODE_EXTI))
+	{
+		Error_Handler();
+	}
+  UART_Config();
   AudioMain();
   /* USER CODE END 2 */
 
@@ -160,6 +179,13 @@ void SystemClock_Config(void)
   /** Configure the System Power Supply
   */
   if (HAL_PWREx_ConfigSupply(PWR_EXTERNAL_SOURCE_SUPPLY) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure the main internal regulator output voltage
+  */
+  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE0) != HAL_OK)
   {
     Error_Handler();
   }
@@ -234,7 +260,7 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK4;
   RCC_ClkInitStruct.CPUCLKSource = RCC_CPUCLKSOURCE_IC1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_IC2_IC6_IC11;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV1;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV1;
@@ -270,6 +296,32 @@ void PeriphCommonClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief CACHEAXI Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CACHEAXI_Init(void)
+{
+
+  /* USER CODE BEGIN CACHEAXI_Init 0 */
+
+  /* USER CODE END CACHEAXI_Init 0 */
+
+  /* USER CODE BEGIN CACHEAXI_Init 1 */
+
+  /* USER CODE END CACHEAXI_Init 1 */
+  hcacheaxi.Instance = CACHEAXI;
+  if (HAL_CACHEAXI_Init(&hcacheaxi) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CACHEAXI_Init 2 */
+
+  /* USER CODE END CACHEAXI_Init 2 */
+
 }
 
 /**
@@ -365,6 +417,59 @@ static void MX_MDF1_Init(void)
 }
 
 /**
+  * @brief RAMCFG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RAMCFG_Init(void)
+{
+
+  /* USER CODE BEGIN RAMCFG_Init 0 */
+
+  /* USER CODE END RAMCFG_Init 0 */
+
+  /* USER CODE BEGIN RAMCFG_Init 1 */
+
+  /* USER CODE END RAMCFG_Init 1 */
+
+  /** Initialize RAMCFG SRAM3
+  */
+  hramcfg_SRAM3.Instance = RAMCFG_SRAM3_AXI;
+  if (HAL_RAMCFG_Init(&hramcfg_SRAM3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMCFG SRAM4
+  */
+  hramcfg_SRAM4.Instance = RAMCFG_SRAM4_AXI;
+  if (HAL_RAMCFG_Init(&hramcfg_SRAM4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMCFG SRAM5
+  */
+  hramcfg_SRAM5.Instance = RAMCFG_SRAM5_AXI;
+  if (HAL_RAMCFG_Init(&hramcfg_SRAM5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initialize RAMCFG SRAM6
+  */
+  hramcfg_SRAM6.Instance = RAMCFG_SRAM6_AXI;
+  if (HAL_RAMCFG_Init(&hramcfg_SRAM6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RAMCFG_Init 2 */
+
+  /* USER CODE END RAMCFG_Init 2 */
+
+}
+
+/**
   * @brief RIF Initialization Function
   * @param None
   * @retval None
@@ -397,6 +502,7 @@ static void MX_MDF1_Init(void)
   HAL_GPIO_ConfigPinAttributes(GPIOB,GPIO_PIN_0,GPIO_PIN_SEC|GPIO_PIN_NPRIV);
   HAL_GPIO_ConfigPinAttributes(GPIOB,GPIO_PIN_6,GPIO_PIN_SEC|GPIO_PIN_NPRIV);
   HAL_GPIO_ConfigPinAttributes(GPIOB,GPIO_PIN_7,GPIO_PIN_SEC|GPIO_PIN_NPRIV);
+  HAL_GPIO_ConfigPinAttributes(GPIOC,GPIO_PIN_13,GPIO_PIN_SEC|GPIO_PIN_NPRIV);
   HAL_GPIO_ConfigPinAttributes(GPIOE,GPIO_PIN_2,GPIO_PIN_SEC|GPIO_PIN_NPRIV);
   HAL_GPIO_ConfigPinAttributes(GPIOE,GPIO_PIN_5,GPIO_PIN_SEC|GPIO_PIN_NPRIV);
   HAL_GPIO_ConfigPinAttributes(GPIOE,GPIO_PIN_6,GPIO_PIN_SEC|GPIO_PIN_NPRIV);
@@ -552,12 +658,64 @@ static void MX_USART1_UART_Init(void)
 }
 
 /**
+  * @brief XSPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_XSPI2_Init(void)
+{
+
+  /* USER CODE BEGIN XSPI2_Init 0 */
+
+  /* USER CODE END XSPI2_Init 0 */
+
+  XSPIM_CfgTypeDef sXspiManagerCfg = {0};
+
+  /* USER CODE BEGIN XSPI2_Init 1 */
+
+  /* USER CODE END XSPI2_Init 1 */
+  /* XSPI2 parameter configuration*/
+  hxspi2.Instance = XSPI2;
+  hxspi2.Init.FifoThresholdByte = 1;
+  hxspi2.Init.MemoryMode = HAL_XSPI_SINGLE_MEM;
+  hxspi2.Init.MemoryType = HAL_XSPI_MEMTYPE_MACRONIX;
+  hxspi2.Init.MemorySize = HAL_XSPI_SIZE_16B;
+  hxspi2.Init.ChipSelectHighTimeCycle = 2;
+  hxspi2.Init.FreeRunningClock = HAL_XSPI_FREERUNCLK_DISABLE;
+  hxspi2.Init.ClockMode = HAL_XSPI_CLOCK_MODE_0;
+  hxspi2.Init.WrapSize = HAL_XSPI_WRAP_NOT_SUPPORTED;
+  hxspi2.Init.ClockPrescaler = 3;
+  hxspi2.Init.SampleShifting = HAL_XSPI_SAMPLE_SHIFT_NONE;
+  hxspi2.Init.DelayHoldQuarterCycle = HAL_XSPI_DHQC_DISABLE;
+  hxspi2.Init.ChipSelectBoundary = HAL_XSPI_BONDARYOF_NONE;
+  hxspi2.Init.MaxTran = 0;
+  hxspi2.Init.Refresh = 0;
+  hxspi2.Init.MemorySelect = HAL_XSPI_CSSEL_NCS1;
+  if (HAL_XSPI_Init(&hxspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sXspiManagerCfg.nCSOverride = HAL_XSPI_CSSEL_OVR_DISABLED;
+  sXspiManagerCfg.IOPort = HAL_XSPIM_IOPORT_2;
+  sXspiManagerCfg.Req2AckTime = 1;
+  if (HAL_XSPIM_Config(&hxspi2, &sXspiManagerCfg, HAL_XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN XSPI2_Init 2 */
+
+  /* USER CODE END XSPI2_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
 
   /* USER CODE END MX_GPIO_Init_1 */
@@ -566,8 +724,23 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPION_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure the EXTI line attribute */
+  HAL_EXTI_ConfigLineAttributes(EXTI_LINE_13, EXTI_LINE_SEC);
+
+  /*Configure GPIO pin : User_Pin */
+  GPIO_InitStruct.Pin = User_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(User_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(User_EXTI_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(User_EXTI_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 

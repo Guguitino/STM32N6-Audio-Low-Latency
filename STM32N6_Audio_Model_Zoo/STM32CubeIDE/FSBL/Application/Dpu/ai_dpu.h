@@ -62,7 +62,7 @@ typedef struct {
   */
   struct npu_instance net_exec_ctx[NPU_NETWORK_NUMBER];
   /**
-  * Specifies the quantization parameters of teh unique input of the network
+  * Specifies the quantization parameters of the unique input of the network
   */
   float  input_Q_inv_scale;
   int8_t input_Q_offset;

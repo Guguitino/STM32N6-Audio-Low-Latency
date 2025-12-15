@@ -177,7 +177,7 @@ In Configuration menu :
 - IC10 (To CKPER CLOCK Mux)
   - Unused
 - IC11 (To System Clock Mux)
-    - Source : PLL3
+    - Source : PLL1
     - div : /1
     - freq : 800 MHz
 - IC14 (To USART1)

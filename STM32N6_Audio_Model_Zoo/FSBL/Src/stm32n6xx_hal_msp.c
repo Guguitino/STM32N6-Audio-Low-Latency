@@ -74,9 +74,56 @@ void HAL_MspInit(void)
 
   /* System interrupt init*/
 
+  HAL_PWREx_EnableVddIO3();
+
   /* USER CODE BEGIN MspInit 1 */
 
   /* USER CODE END MspInit 1 */
+}
+
+/**
+  * @brief CACHEAXI MSP Initialization
+  * This function configures the hardware resources used in this example
+  * @param hcacheaxi: CACHEAXI handle pointer
+  * @retval None
+  */
+void HAL_CACHEAXI_MspInit(CACHEAXI_HandleTypeDef* hcacheaxi)
+{
+  if(hcacheaxi->Instance==CACHEAXI)
+  {
+    /* USER CODE BEGIN CACHEAXI_MspInit 0 */
+
+    /* USER CODE END CACHEAXI_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_CACHEAXI_CLK_ENABLE();
+    /* USER CODE BEGIN CACHEAXI_MspInit 1 */
+
+    /* USER CODE END CACHEAXI_MspInit 1 */
+
+  }
+
+}
+
+/**
+  * @brief CACHEAXI MSP De-Initialization
+  * This function freeze the hardware resources used in this example
+  * @param hcacheaxi: CACHEAXI handle pointer
+  * @retval None
+  */
+void HAL_CACHEAXI_MspDeInit(CACHEAXI_HandleTypeDef* hcacheaxi)
+{
+  if(hcacheaxi->Instance==CACHEAXI)
+  {
+    /* USER CODE BEGIN CACHEAXI_MspDeInit 0 */
+
+    /* USER CODE END CACHEAXI_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_CACHEAXI_CLK_DISABLE();
+    /* USER CODE BEGIN CACHEAXI_MspDeInit 1 */
+
+    /* USER CODE END CACHEAXI_MspDeInit 1 */
+  }
+
 }
 
 /**
@@ -221,6 +268,44 @@ void HAL_MDF_MspDeInit(MDF_HandleTypeDef* hmdf)
 }
 
 /**
+  * @brief RAMCFG MSP Initialization
+  * This function configures the hardware resources used in this example
+  * @param hramcfg: RAMCFG handle pointer
+  * @retval None
+  */
+void HAL_RAMCFG_MspInit(RAMCFG_HandleTypeDef* hramcfg)
+{
+    /* USER CODE BEGIN RAMCFG_MspInit 0 */
+
+    /* USER CODE END RAMCFG_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_RAMCFG_CLK_ENABLE();
+    /* USER CODE BEGIN RAMCFG_MspInit 1 */
+
+    /* USER CODE END RAMCFG_MspInit 1 */
+
+}
+
+/**
+  * @brief RAMCFG MSP De-Initialization
+  * This function freeze the hardware resources used in this example
+  * @param hramcfg: RAMCFG handle pointer
+  * @retval None
+  */
+void HAL_RAMCFG_MspDeInit(RAMCFG_HandleTypeDef* hramcfg)
+{
+    /* USER CODE BEGIN RAMCFG_MspDeInit 0 */
+
+    /* USER CODE END RAMCFG_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_RAMCFG_CLK_DISABLE();
+    /* USER CODE BEGIN RAMCFG_MspDeInit 1 */
+
+    /* USER CODE END RAMCFG_MspDeInit 1 */
+
+}
+
+/**
   * @brief TIM_Base MSP Initialization
   * This function configures the hardware resources used in this example
   * @param htim_base: TIM_Base handle pointer
@@ -284,7 +369,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
   /** Initializes the peripherals clock
   */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART1;
-    PeriphClkInitStruct.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
+    PeriphClkInitStruct.Usart1ClockSelection = RCC_USART1CLKSOURCE_IC14;
+    PeriphClkInitStruct.ICSelection[RCC_IC14].ClockSelection = RCC_ICCLKSOURCE_PLL1;
+    PeriphClkInitStruct.ICSelection[RCC_IC14].ClockDivider = 8;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
       Error_Handler();
@@ -338,6 +425,105 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
     /* USER CODE BEGIN USART1_MspDeInit 1 */
 
     /* USER CODE END USART1_MspDeInit 1 */
+  }
+
+}
+
+/**
+  * @brief XSPI MSP Initialization
+  * This function configures the hardware resources used in this example
+  * @param hxspi: XSPI handle pointer
+  * @retval None
+  */
+void HAL_XSPI_MspInit(XSPI_HandleTypeDef* hxspi)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+  if(hxspi->Instance==XSPI2)
+  {
+    /* USER CODE BEGIN XSPI2_MspInit 0 */
+
+    /* USER CODE END XSPI2_MspInit 0 */
+
+  /** Initializes the peripherals clock
+  */
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_XSPI2;
+    PeriphClkInitStruct.Xspi2ClockSelection = RCC_XSPI2CLKSOURCE_HCLK;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    /* Peripheral clock enable */
+    __HAL_RCC_XSPIM_CLK_ENABLE();
+    __HAL_RCC_XSPI2_CLK_ENABLE();
+
+    __HAL_RCC_GPION_CLK_ENABLE();
+    /**XSPI2 GPIO Configuration
+    PN4     ------> XSPIM_P2_IO2
+    PN6     ------> XSPIM_P2_CLK
+    PN8     ------> XSPIM_P2_IO4
+    PN0     ------> XSPIM_P2_DQS0
+    PN3     ------> XSPIM_P2_IO1
+    PN5     ------> XSPIM_P2_IO3
+    PN9     ------> XSPIM_P2_IO5
+    PN2     ------> XSPIM_P2_IO0
+    PN10     ------> XSPIM_P2_IO6
+    PN11     ------> XSPIM_P2_IO7
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_6|GPIO_PIN_8|GPIO_PIN_0
+                          |GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_9|GPIO_PIN_2
+                          |GPIO_PIN_10|GPIO_PIN_11;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF9_XSPIM_P2;
+    HAL_GPIO_Init(GPION, &GPIO_InitStruct);
+
+    /* USER CODE BEGIN XSPI2_MspInit 1 */
+
+    /* USER CODE END XSPI2_MspInit 1 */
+
+  }
+
+}
+
+/**
+  * @brief XSPI MSP De-Initialization
+  * This function freeze the hardware resources used in this example
+  * @param hxspi: XSPI handle pointer
+  * @retval None
+  */
+void HAL_XSPI_MspDeInit(XSPI_HandleTypeDef* hxspi)
+{
+  if(hxspi->Instance==XSPI2)
+  {
+    /* USER CODE BEGIN XSPI2_MspDeInit 0 */
+
+    /* USER CODE END XSPI2_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_XSPIM_CLK_DISABLE();
+    __HAL_RCC_XSPI2_CLK_DISABLE();
+
+    /**XSPI2 GPIO Configuration
+    PN4     ------> XSPIM_P2_IO2
+    PN6     ------> XSPIM_P2_CLK
+    PN8     ------> XSPIM_P2_IO4
+    PN0     ------> XSPIM_P2_DQS0
+    PN3     ------> XSPIM_P2_IO1
+    PN5     ------> XSPIM_P2_IO3
+    PN9     ------> XSPIM_P2_IO5
+    PN2     ------> XSPIM_P2_IO0
+    PN10     ------> XSPIM_P2_IO6
+    PN11     ------> XSPIM_P2_IO7
+    */
+    HAL_GPIO_DeInit(GPION, GPIO_PIN_4|GPIO_PIN_6|GPIO_PIN_8|GPIO_PIN_0
+                          |GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_9|GPIO_PIN_2
+                          |GPIO_PIN_10|GPIO_PIN_11);
+
+    /* USER CODE BEGIN XSPI2_MspDeInit 1 */
+
+    /* USER CODE END XSPI2_MspDeInit 1 */
   }
 
 }

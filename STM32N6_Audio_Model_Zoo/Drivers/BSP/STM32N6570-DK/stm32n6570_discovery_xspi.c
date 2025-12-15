@@ -231,7 +231,7 @@ int32_t BSP_XSPI_NOR_Init(uint32_t Instance, BSP_XSPI_NOR_Init_t *Init)
       (void)MX66UW1G45G_GetFlashInfo(&pInfo);
 
       /* Fill config structure */
-      xspi_init.ClockPrescaler = 0x03; /* XSPI clock = 200MHz / ClockPrescaler = 50MHz, then switch to 200MHz*/
+      xspi_init.ClockPrescaler = 0x01; /* XSPI clock = 200MHz / ClockPrescaler = 50MHz, then switch to 200MHz*/
       xspi_init.MemorySize     = (uint32_t)POSITION_VAL((uint32_t)pInfo.FlashSize);
       xspi_init.SampleShifting = HAL_XSPI_SAMPLE_SHIFT_NONE;
       xspi_init.TransferRate   = (uint32_t)Init->TransferRate;

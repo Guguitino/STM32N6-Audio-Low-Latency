@@ -1,4 +1,7 @@
 /*
+#define HAL_XSPI_MODULE_ENABLED
+#define HAL_RAMCFG_MODULE_ENABLED
+ *
  * AudioMain.h
  *
  *  Created on: Oct 17, 2025
@@ -44,6 +47,8 @@ static __IO uint32_t CaptureBufferCpltFlag;
 static int16_t CaptureBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
 static int16_t PlaybackBuffer[AUDIO_BUFFER_SIZE] __NON_CACHEABLE;
 
+static int32_t AudioProcIsOn;
+
 AudioAcqCtx_t AudioAcqCtx;
 AudioPlayBackCtx_t AudioPlayBackCtx;
 AudioProcCtx_t AudioProcCtx;
@@ -72,8 +77,6 @@ static void NPU_SettingsLog(void);
 
 void AudioMainInit(void)
 {
-	  /* Power on ICACHE */
-	  MEMSYSCTL->MSCR |= MEMSYSCTL_MSCR_ICACTIVE_Msk;
 
 	MPU_Config();
 	Int_Mem_Config(); //MX -> RAMCFG ?
@@ -98,6 +101,8 @@ void AudioMain(void)
 	TimCtx_t TimCtx6 = {};
 	TimCtx6.htim = &htim6;
 	TimInit(&TimCtx6);
+
+	AudioProcIsOn = 1;
 
 	/* Start record */
 	CaptureHalfBufferCpltFlag = 0;
@@ -132,6 +137,9 @@ void AudioMain(void)
 
 	LowPass_FirstOrder_Init(&LPFilter, 1000.0f, (float32_t)AUDIO_FREQUENCY);
 
+	ExecTimeMeasurement_t AudioProcessMes;
+	AudioProcessMes.TimCtx = &TimCtx6;
+
 	/* Initialize non blocking delay for the led */
 	NBDelay_t LedDelay = {};
 	LedDelay.TimCtx = &TimCtx6;
@@ -139,32 +147,14 @@ void AudioMain(void)
 
 	while (1)
 	{
-
-		if(CaptureHalfBufferCpltFlag == 1)
-		{
-			int16_t *AudioInBuffer = &CaptureBuffer[0];
-			int16_t *AudioOutBuffer = &PlaybackBuffer[0];
-
-			AudioCapture_ring_buff_feed(&AudioAcqCtx.ring_buff, (uint8_t *)AudioInBuffer, AUDIO_BUFFER_SIZE/2);
-			AudioCapture_ring_buff_consume((uint8_t *)AudioOutBuffer, &AudioPlayBackCtx.ring_buff, AUDIO_BUFFER_SIZE/2);
-
-			CaptureHalfBufferCpltFlag  = 0;
-
-		}
-		if(CaptureBufferCpltFlag == 1)
-		{
-			int16_t *AudioInBuffer = &CaptureBuffer[AUDIO_BUFFER_SIZE/2];
-			int16_t *AudioOutBuffer = &PlaybackBuffer[AUDIO_BUFFER_SIZE/2];
-
-			AudioCapture_ring_buff_feed(&AudioAcqCtx.ring_buff, (uint8_t *)AudioInBuffer, AUDIO_BUFFER_SIZE/2);
-			AudioCapture_ring_buff_consume((uint8_t *)AudioOutBuffer, &AudioPlayBackCtx.ring_buff, AUDIO_BUFFER_SIZE/2);
-
-			CaptureBufferCpltFlag = 0;
-		}
-
 		if (AudioAcqCtx.ring_buff.availableSamples >= AUDIO_ACQ_LEN)
 		{
+
+			ExecTimeMeasurementStart(&AudioProcessMes);
+			print("Processing ! ");
 			AudioProcess(&AudioAcqCtx, &AudioProcCtx, &AudioPlayBackCtx);
+			ExecTimeMeasurementStop(&AudioProcessMes);
+			my_printf("Elapsed time for processing : %f\r\n", AudioProcessMes.TimeElapsed_ms);
 		}
 
 		if(NBDelayHasRunOut(&LedDelay))
@@ -177,6 +167,8 @@ void AudioMain(void)
 
 static void AudioProcess(AudioAcqCtx_t *AudioAcqCtx, AudioProcCtx_t *AudioProcCtx, AudioPlayBackCtx_t *AudioPlayBackCtx)
 {
+	BSP_LED_On(LED_RED);
+
 	uint8_t *ProcBuffer = (uint8_t *) AudioProcCtx->ProcBuffer;
 	uint8_t *ProcBufferOvl = (uint8_t *) (&AudioProcCtx->ProcBuffer[AUDIO_ACQ_LEN]);
 	uint8_t *AcqBuffer = (uint8_t *) (&AudioProcCtx->ProcBuffer[AUDIO_ACQ_OFFSET]);
@@ -195,65 +187,78 @@ static void AudioProcess(AudioAcqCtx_t *AudioAcqCtx, AudioProcCtx_t *AudioProcCt
 	PostProc_DPU(&AudioProcCtx->AudioPostCtx, AudioProcCtx->AudioPreCtx.pCplxSpectrum,
 			(float32_t *) LL_Buffer_addr_start(AudioProcCtx->AIOutputPtr), AudioProcCtx->AudioOut);
 
-	AudioCapture_ring_buff_feed(&AudioPlayBackCtx->ring_buff, &AudioProcCtx->AudioOut[AUDIO_OUT_FIRST], AUDIO_ACQ_LEN);
+	int16_t *AudioProcessOut;
+	if(AudioProcIsOn)
+	{
+		AudioProcessOut = &AudioProcCtx->AudioOut[AUDIO_OUT_FIRST];
+	}
+	else
+	{
+		AudioProcessOut = (int16_t *)AcqBuffer;
+	}
+
+	AudioCapture_ring_buff_feed(&AudioPlayBackCtx->ring_buff, (uint8_t *)AudioProcessOut, AUDIO_ACQ_LEN);
+	print("Playback read index : %d, write index : %d\r\n", AudioPlayBackCtx->ring_buff.readSampleIndex, AudioPlayBackCtx->ring_buff.writeSampleIndex);
+
+	BSP_LED_Off(LED_RED);
 }
 
 static void Int_Mem_Config(void)
 {
-  RAMCFG_HandleTypeDef hramcfg = {0};
+	RAMCFG_HandleTypeDef hramcfg = {0};
 
-  __HAL_RCC_SYSCFG_CLK_ENABLE();
-  __HAL_RCC_CRC_CLK_ENABLE();
+	__HAL_RCC_SYSCFG_CLK_ENABLE();
+	__HAL_RCC_CRC_CLK_ENABLE();
 
-  RCC->MEMENR |= RCC_MEMENR_AXISRAM3EN | RCC_MEMENR_AXISRAM4EN | RCC_MEMENR_AXISRAM5EN | RCC_MEMENR_AXISRAM6EN;
-  RCC->MEMENR |= RCC_MEMENR_CACHEAXIRAMEN;
-  hramcfg.Instance =  RAMCFG_SRAM2_AXI;
-  HAL_RAMCFG_EnableAXISRAM(&hramcfg);
-  hramcfg.Instance =  RAMCFG_SRAM3_AXI;
-  HAL_RAMCFG_EnableAXISRAM(&hramcfg);
-  hramcfg.Instance =  RAMCFG_SRAM4_AXI;
-  HAL_RAMCFG_EnableAXISRAM(&hramcfg);
-  hramcfg.Instance =  RAMCFG_SRAM5_AXI;
-  HAL_RAMCFG_EnableAXISRAM(&hramcfg);
-  hramcfg.Instance =  RAMCFG_SRAM6_AXI;
-  HAL_RAMCFG_EnableAXISRAM(&hramcfg);
+	RCC->MEMENR |= RCC_MEMENR_AXISRAM3EN | RCC_MEMENR_AXISRAM4EN | RCC_MEMENR_AXISRAM5EN | RCC_MEMENR_AXISRAM6EN;
+	RCC->MEMENR |= RCC_MEMENR_CACHEAXIRAMEN;
+	hramcfg.Instance =  RAMCFG_SRAM2_AXI;
+	HAL_RAMCFG_EnableAXISRAM(&hramcfg);
+	hramcfg.Instance =  RAMCFG_SRAM3_AXI;
+	HAL_RAMCFG_EnableAXISRAM(&hramcfg);
+	hramcfg.Instance =  RAMCFG_SRAM4_AXI;
+	HAL_RAMCFG_EnableAXISRAM(&hramcfg);
+	hramcfg.Instance =  RAMCFG_SRAM5_AXI;
+	HAL_RAMCFG_EnableAXISRAM(&hramcfg);
+	hramcfg.Instance =  RAMCFG_SRAM6_AXI;
+	HAL_RAMCFG_EnableAXISRAM(&hramcfg);
 
-  __HAL_RCC_CACHEAXIRAM_MEM_CLK_ENABLE();
-  __HAL_RCC_AXISRAM2_MEM_CLK_ENABLE();
-  __HAL_RCC_AXISRAM3_MEM_CLK_ENABLE();
-  __HAL_RCC_AXISRAM4_MEM_CLK_ENABLE();
-  __HAL_RCC_AXISRAM5_MEM_CLK_ENABLE();
-  __HAL_RCC_AXISRAM6_MEM_CLK_ENABLE();
+	__HAL_RCC_CACHEAXIRAM_MEM_CLK_ENABLE();
+	__HAL_RCC_AXISRAM2_MEM_CLK_ENABLE();
+	__HAL_RCC_AXISRAM3_MEM_CLK_ENABLE();
+	__HAL_RCC_AXISRAM4_MEM_CLK_ENABLE();
+	__HAL_RCC_AXISRAM5_MEM_CLK_ENABLE();
+	__HAL_RCC_AXISRAM6_MEM_CLK_ENABLE();
 
-  /* Allow caches to be activated. Default value is 1, but the current boot sets it to 0 */
-  MEMSYSCTL->MSCR |= MEMSYSCTL_MSCR_DCACTIVE_Msk | MEMSYSCTL_MSCR_ICACTIVE_Msk;
+	/* Allow caches to be activated. Default value is 1, but the current boot sets it to 0 */
+	MEMSYSCTL->MSCR |= MEMSYSCTL_MSCR_DCACTIVE_Msk | MEMSYSCTL_MSCR_ICACTIVE_Msk;
 }
 
 /**
-* @brief  external memories configuration (Flash & RAM).
-* @param  None.
-* @retval None.
-*/
+ * @brief  external memories configuration (Flash & RAM).
+ * @param  None.
+ * @retval None.
+ */
 static void Ext_Mem_Config(void)
 {
-  BSP_XSPI_NOR_Init_t Flash;
-  Flash.InterfaceMode = MX66UW1G45G_OPI_MODE;
-  Flash.TransferRate = MX66UW1G45G_DTR_TRANSFER;
+	BSP_XSPI_NOR_Init_t Flash;
+	Flash.InterfaceMode = MX66UW1G45G_OPI_MODE;
+	Flash.TransferRate = MX66UW1G45G_DTR_TRANSFER;
 
-  if(BSP_XSPI_NOR_Init(0, &Flash) != BSP_ERROR_NONE)
-  {
-    __BKPT(0);
-  }
-  BSP_XSPI_NOR_EnableMemoryMappedMode(0);
-  MODIFY_REG(XSPI2->CR, XSPI_CR_NOPREF, HAL_XSPI_AUTOMATIC_PREFETCH_DISABLE); /* Hotfix for xspi: no prefetch */
+	if(BSP_XSPI_NOR_Init(0, &Flash) != BSP_ERROR_NONE)
+	{
+		__BKPT(0);
+	}
+	BSP_XSPI_NOR_EnableMemoryMappedMode(0);
+	MODIFY_REG(XSPI2->CR, XSPI_CR_NOPREF, HAL_XSPI_AUTOMATIC_PREFETCH_DISABLE); /* Hotfix for xspi: no prefetch */
 }
 
 static void IAC_Config(void)
 {
-/* Configure IAC to trap illegal access events */
-  __HAL_RCC_IAC_CLK_ENABLE();
-  __HAL_RCC_IAC_FORCE_RESET();
-  __HAL_RCC_IAC_RELEASE_RESET();
+	/* Configure IAC to trap illegal access events */
+	__HAL_RCC_IAC_CLK_ENABLE();
+	__HAL_RCC_IAC_FORCE_RESET();
+	__HAL_RCC_IAC_RELEASE_RESET();
 }
 
 static void MPU_Config(void)
@@ -343,7 +348,7 @@ static void Playback_Init(void)
 	codec_init.OutputDevice = WM8904_OUT_HEADPHONE;
 	codec_init.Resolution   = WM8904_RESOLUTION_16B;
 	codec_init.Frequency    = WM8904_FREQUENCY_16K;
-	codec_init.Volume       = 80U;
+	codec_init.Volume       = 150U;
 	if (Audio_Drv->Init(Audio_CompObj, &codec_init) < 0)
 	{
 		Error_Handler();
@@ -361,7 +366,11 @@ static void Playback_Init(void)
  */
 void HAL_MDF_AcqCpltCallback(MDF_HandleTypeDef *hmdf)
 {
-	CaptureBufferCpltFlag = 1;
+	int16_t *AudioInBuffer = &CaptureBuffer[AUDIO_BUFFER_SIZE/2];
+	int16_t *AudioOutBuffer = &PlaybackBuffer[AUDIO_BUFFER_SIZE/2];
+
+	AudioCapture_ring_buff_feed(&AudioAcqCtx.ring_buff, (uint8_t *)AudioInBuffer, AUDIO_BUFFER_SIZE/2);
+	AudioCapture_ring_buff_consume((uint8_t *)AudioOutBuffer, &AudioPlayBackCtx.ring_buff, AUDIO_BUFFER_SIZE/2);
 }
 
 /**
@@ -371,7 +380,21 @@ void HAL_MDF_AcqCpltCallback(MDF_HandleTypeDef *hmdf)
  */
 void HAL_MDF_AcqHalfCpltCallback(MDF_HandleTypeDef *hmdf)
 {
-	CaptureHalfBufferCpltFlag = 1;
+	int16_t *AudioInBuffer = &CaptureBuffer[0];
+	int16_t *AudioOutBuffer = &PlaybackBuffer[0];
+
+	AudioCapture_ring_buff_feed(&AudioAcqCtx.ring_buff, (uint8_t *)AudioInBuffer, AUDIO_BUFFER_SIZE/2);
+	AudioCapture_ring_buff_consume((uint8_t *)AudioOutBuffer, &AudioPlayBackCtx.ring_buff, AUDIO_BUFFER_SIZE/2);
+}
+
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
+{
+	//Looking for interupt from User1 button
+	if(GPIO_Pin == GPIO_PIN_13)
+	{
+		print("Button pressed !\r\n");
+		AudioProcIsOn = !AudioProcIsOn;
+	}
 }
 
 ///**
@@ -400,7 +423,7 @@ static void InitAudioCapture(AudioAcqCtx_t *AudioAcqCtx)
 
 static void InitAudioPlayback(AudioPlayBackCtx_t *AudioPlayBackCtx)
 {
-	AudioPlayBackCtx->ring_buff.nbSamples = PATCH_LENGTH * 4;
+	AudioPlayBackCtx->ring_buff.nbSamples = (PATCH_LENGTH * 4 );
 	AudioPlayBackCtx->ring_buff.readSampleIndex  = 0 ;
 	AudioPlayBackCtx->ring_buff.writeSampleIndex = 0 ;
 	AudioPlayBackCtx->ring_buff.nbFrames = 1;
@@ -416,52 +439,52 @@ static void InitAudioPlayback(AudioPlayBackCtx_t *AudioPlayBackCtx)
  */
 void InitAudioProc(AudioProcCtx_t *AudioProcCtx)
 {
-  struct npu_model_info *pxInfo;
+	struct npu_model_info *pxInfo;
 
-  /* get the AI model */
-  AiDPULoadModel( &AudioProcCtx->AICtx, CTRL_X_CUBE_AI_MODEL_NAME );
-  pxInfo     = &AudioProcCtx->AICtx.net_exec_ctx->info;
-  AudioProcCtx->AIInputPtr = (int8_t *) LL_Buffer_addr_start(pxInfo->in_bufs[0]);
-  AudioProcCtx->AIOutputPtr = pxInfo->out_bufs[0] ;
+	/* get the AI model */
+	AiDPULoadModel( &AudioProcCtx->AICtx, CTRL_X_CUBE_AI_MODEL_NAME );
+	pxInfo     = &AudioProcCtx->AICtx.net_exec_ctx->info;
+	AudioProcCtx->AIInputPtr = (int8_t *) LL_Buffer_addr_start(pxInfo->in_bufs[0]);
+	AudioProcCtx->AIOutputPtr = pxInfo->out_bufs[0] ;
 
-  /* clear input samples array ( get silence on first overlayed patch */
-  memset(AudioProcCtx->ProcBuffer,0,PATCH_LENGTH*sizeof(int16_t));
-  /* Audio Preprocessing init */
-  PreProc_DPUInit(&AudioProcCtx->AudioPreCtx);
-  /* Audio Postprocessing init */
-  PostProc_DPUInit(&AudioProcCtx->AudioPostCtx);
-  /* transfer quantization parametres included in AI model to the Audio DPU   */
-  AudioProcCtx->AudioPreCtx.output_Q_offset    = AudioProcCtx->AICtx.input_Q_offset;
-  AudioProcCtx->AudioPreCtx.output_Q_inv_scale =
-            (PREPROC_FLOAT_T) AudioProcCtx->AICtx.input_Q_inv_scale;
-  AudioProcCtx->AudioPreCtx.quant.output_Q_inv_scale = AudioProcCtx->AudioPreCtx.output_Q_inv_scale;
-  AudioProcCtx->AudioPreCtx.quant.output_Q_offset = AudioProcCtx->AudioPreCtx.output_Q_offset;
-  //AudioProcCtx->cnt = 0;
+	/* clear input samples array ( get silence on first overlayed patch */
+	memset(AudioProcCtx->ProcBuffer,0,PATCH_LENGTH*sizeof(int16_t));
+	/* Audio Preprocessing init */
+	PreProc_DPUInit(&AudioProcCtx->AudioPreCtx);
+	/* Audio Postprocessing init */
+	PostProc_DPUInit(&AudioProcCtx->AudioPostCtx);
+	/* transfer quantization parametres included in AI model to the Audio DPU   */
+	AudioProcCtx->AudioPreCtx.output_Q_offset    = AudioProcCtx->AICtx.input_Q_offset;
+	AudioProcCtx->AudioPreCtx.output_Q_inv_scale =
+			(PREPROC_FLOAT_T) AudioProcCtx->AICtx.input_Q_inv_scale;
+	AudioProcCtx->AudioPreCtx.quant.output_Q_inv_scale = AudioProcCtx->AudioPreCtx.output_Q_inv_scale;
+	AudioProcCtx->AudioPreCtx.quant.output_Q_offset = AudioProcCtx->AudioPreCtx.output_Q_offset;
+	//AudioProcCtx->cnt = 0;
 }
 
 /**
-* @brief  Displays System Settings
-* @param  None
-* @retval None
-*/
+ * @brief  Displays System Settings
+ * @param  None
+ * @retval None
+ */
 void displaySystemSetting(void)
 {
-  my_printf("\n\r");
-  my_printf(SEPARATION_LINE);
-  my_printf("        System configuration (%s)\n\r",APP_CONF_STR);
-  my_printf(SEPARATION_LINE);
-  printf("\n\rLog Level: %s\n\n\r", getLogLevelStr(LOG_LEVEL));
-  systemSettingLog();
-  NPU_SettingsLog();
+	my_printf("\n\r");
+	my_printf(SEPARATION_LINE);
+	my_printf("        System configuration (%s)\n\r",APP_CONF_STR);
+	my_printf(SEPARATION_LINE);
+	printf("\n\rLog Level: %s\n\n\r", getLogLevelStr(LOG_LEVEL));
+	systemSettingLog();
+	NPU_SettingsLog();
 }
 
 static void NPU_SettingsLog(void)
 {
-    struct mcu_conf sys_conf;
-    getSysConf(&sys_conf);
-    my_printf("\n\rNPU Runtime configuration...\r\n");
-    my_printf(" NPU clock    : %u MHz\r\n", (int)sys_conf.extra[1]/1000000);
-    my_printf(" NIC clock    : %u MHz\r\n", (int)sys_conf.extra[2]/1000000);
+	struct mcu_conf sys_conf;
+	getSysConf(&sys_conf);
+	my_printf("\n\rNPU Runtime configuration...\r\n");
+	my_printf(" NPU clock    : %u MHz\r\n", (int)sys_conf.extra[1]/1000000);
+	my_printf(" NIC clock    : %u MHz\r\n", (int)sys_conf.extra[2]/1000000);
 }
 
 
