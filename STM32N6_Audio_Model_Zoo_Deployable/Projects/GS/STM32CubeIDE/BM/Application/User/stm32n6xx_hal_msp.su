@@ -1,0 +1,15 @@
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:68:6:HAL_MspInit	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:90:6:HAL_CACHEAXI_MspInit	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:113:6:HAL_CACHEAXI_MspDeInit	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:135:6:HAL_MDF_MspInit	560	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:242:6:HAL_MDF_MspDeInit	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:276:6:HAL_RAMCFG_MspInit	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:295:6:HAL_RAMCFG_MspDeInit	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:314:6:HAL_TIM_Base_MspInit	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:337:6:HAL_TIM_Base_MspDeInit	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:359:6:HAL_UART_MspInit	440	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:409:6:HAL_UART_MspDeInit	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:438:6:HAL_XSPI_MspInit	448	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:497:6:HAL_XSPI_MspDeInit	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:539:6:HAL_SAI_MspInit	560	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_hal_msp.c:648:6:HAL_SAI_MspDeInit	8	static

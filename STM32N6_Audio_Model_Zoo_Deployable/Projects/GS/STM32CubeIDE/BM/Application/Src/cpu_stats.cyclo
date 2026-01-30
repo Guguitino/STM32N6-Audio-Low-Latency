@@ -1,0 +1,8 @@
+../Application/Src/cpu_stats.c:39:6:time_stats_init	2
+../Application/Src/cpu_stats.c:49:6:time_stats_reset	1
+../Application/Src/cpu_stats.c:56:6:time_stats_store	3
+../Application/Src/cpu_stats.c:72:7:time_stats_get_avg	2
+../Application/Src/cpu_stats.c:76:7:time_stats_get_min	2
+../Application/Src/cpu_stats.c:80:7:time_stats_get_max	1
+../Application/Src/cpu_stats.c:84:7:time_stats_get_latest	1
+../Application/Src/cpu_stats.c:88:14:time_stats_get_cnt	1

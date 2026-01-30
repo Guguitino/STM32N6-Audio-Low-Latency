@@ -1,0 +1,4 @@
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/mel_filterbank_f16.c:265:27:InverseMelScale_f16	3
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/mel_filterbank_f16.c:235:27:MelScale_f16	3
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/mel_filterbank_f16.c:62:6:MelFilterbank_f16_Init	9
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/mel_filterbank_f16.c:214:6:MelFilterbank_f16	2

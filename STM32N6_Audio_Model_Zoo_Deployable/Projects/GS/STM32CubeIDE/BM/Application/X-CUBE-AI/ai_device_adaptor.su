@@ -1,0 +1,4 @@
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/X-CUBE-AI/ai_device_adaptor.c:54:17:get_IC_freq	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/X-CUBE-AI/ai_device_adaptor.c:86:13:get_system_freqs	104	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/X-CUBE-AI/ai_device_adaptor.c:122:6:port_hal_set_extra_conf	24	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/X-CUBE-AI/ai_device_adaptor.c:155:6:port_dwt_init_imp	0	static

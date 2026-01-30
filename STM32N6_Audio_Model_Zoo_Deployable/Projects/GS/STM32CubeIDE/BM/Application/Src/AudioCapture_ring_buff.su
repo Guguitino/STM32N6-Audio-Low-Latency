@@ -1,0 +1,6 @@
+../Application/Src/AudioCapture_ring_buff.c:65:6:AudioCapture_ring_buff_reset	0	static
+../Application/Src/AudioCapture_ring_buff.c:76:6:AudioCapture_ring_buff_alloc	8	static
+../Application/Src/AudioCapture_ring_buff.c:92:6:AudioCapture_ring_buff_free	8	static
+../Application/Src/AudioCapture_ring_buff.c:103:10:AudioCapture_ring_buff_consume_no_cpy	8	static,ignoring_inline_asm
+../Application/Src/AudioCapture_ring_buff.c:118:10:AudioCapture_ring_buff_consume	32	static,ignoring_inline_asm
+../Application/Src/AudioCapture_ring_buff.c:159:6:AudioCapture_ring_buff_feed	32	static,ignoring_inline_asm

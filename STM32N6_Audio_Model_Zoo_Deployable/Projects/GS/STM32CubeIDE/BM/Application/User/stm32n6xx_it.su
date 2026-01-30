@@ -1,0 +1,15 @@
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:76:6:NMI_Handler	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:91:6:HardFault_Handler	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:106:6:MemManage_Handler	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:121:6:BusFault_Handler	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:136:6:UsageFault_Handler	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:151:6:SecureFault_Handler	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:166:6:SVC_Handler	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:179:6:DebugMon_Handler	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:192:6:PendSV_Handler	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:205:6:SysTick_Handler	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:226:6:EXTI13_IRQHandler	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:240:6:GPDMA1_Channel0_IRQHandler	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:254:6:GPDMA1_Channel6_IRQHandler	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:268:6:MDF1_FLT0_IRQHandler	8	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/GS/FSBL/Src/stm32n6xx_it.c:282:6:SAI1_A_IRQHandler	8	static

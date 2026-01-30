@@ -1,0 +1,7 @@
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/Drivers/CMSIS/DSP/Source/TransformFunctions/arm_cfft_f16.c:40:18:arm_inverse_fft_length_f16	0	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/Drivers/CMSIS/DSP/Source/TransformFunctions/arm_cfft_f16.c:297:13:_arm_radix4_butterfly_inverse_f16_mve	152	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/Drivers/CMSIS/DSP/Source/TransformFunctions/arm_cfft_f16.c:465:13:arm_cfft_radix4by2_inverse_f16_mve	40	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/Drivers/CMSIS/DSP/Source/TransformFunctions/arm_cfft_f16.c:91:13:_arm_radix4_butterfly_f16_mve	136	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/Drivers/CMSIS/DSP/Source/TransformFunctions/arm_cfft_f16.c:253:13:arm_cfft_radix4by2_f16_mve	24	static
+../../../../Drivers/CMSIS/DSP/PrivateInclude/arm_vec_fft.h:135:22:arm_bitreversal_16_inpl_mve	48	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/Drivers/CMSIS/DSP/Source/TransformFunctions/arm_cfft_f16.c:528:6:arm_cfft_f16	24	static

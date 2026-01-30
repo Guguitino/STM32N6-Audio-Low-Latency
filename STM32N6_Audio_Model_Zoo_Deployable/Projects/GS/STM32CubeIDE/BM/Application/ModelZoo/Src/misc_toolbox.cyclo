@@ -1,0 +1,9 @@
+../Application/ModelZoo/Src/misc_toolbox.c:30:17:get_risaf_max_addr	35
+../Application/ModelZoo/Src/misc_toolbox.c:53:13:set_risaf_default	1
+../Application/ModelZoo/Src/misc_toolbox.c:117:6:set_clk_sleep_mode	1
+../Application/ModelZoo/Src/misc_toolbox.c:163:6:upscale_vddcore_level	1
+../Application/ModelZoo/Src/misc_toolbox.c:182:6:UART_Config	2
+../Application/ModelZoo/Src/misc_toolbox.c:230:6:NPU_Config	1
+../Application/ModelZoo/Src/misc_toolbox.c:259:6:RISAF_Config	1
+../Application/ModelZoo/Src/misc_toolbox.c:292:6:set_vector_table_addr	1
+../Application/ModelZoo/Src/misc_toolbox.c:306:6:system_init_post	1

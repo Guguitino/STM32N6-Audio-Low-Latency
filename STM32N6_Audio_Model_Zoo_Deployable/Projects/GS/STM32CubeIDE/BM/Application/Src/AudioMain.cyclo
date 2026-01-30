@@ -1,0 +1,17 @@
+../Application/Src/AudioMain.c:256:13:IAC_Config	1
+../Application/Src/AudioMain.c:264:13:MPU_Config	1
+../Application/Src/AudioMain.c:206:13:Int_Mem_Config	1
+../Application/Src/AudioMain.c:242:13:Ext_Mem_Config	2
+../Application/Src/AudioMain.c:412:13:InitAudioCapture	1
+../Application/Src/AudioMain.c:424:13:InitAudioPlayback	1
+../Application/Src/AudioMain.c:304:13:WM8904_Probe	4
+../Application/Src/AudioMain.c:337:13:Playback_Init	3
+../Application/Src/AudioMain.c:168:13:AudioProcess	3
+../Application/Src/AudioMain.c:481:13:NPU_SettingsLog	1
+../Application/Src/AudioMain.c:367:6:HAL_MDF_AcqCpltCallback	1
+../Application/Src/AudioMain.c:381:6:HAL_MDF_AcqHalfCpltCallback	1
+../Application/Src/AudioMain.c:390:6:HAL_GPIO_EXTI_Falling_Callback	2
+../Application/Src/AudioMain.c:440:6:InitAudioProc	2
+../Application/Src/AudioMain.c:99:6:AudioMain	6
+../Application/Src/AudioMain.c:470:6:displaySystemSetting	1
+../Application/Src/AudioMain.c:78:6:AudioMainInit	3

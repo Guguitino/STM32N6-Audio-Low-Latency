@@ -24,35 +24,44 @@ Project structure as seen in STM32CubeIDE
 STM32N6-Audio-Low-Latency/
 │
 ├── Application/
-│   ├── Inc/                  # User Header files
-│   ├── Src/                  # User Source files
-│   ├── Startup/              # CubeMX Generated files
-│   └── User/                 # CubeMX Generated files
+│   ├── Inc/                 		    # User Header files
+│   ├── Src/                  			# User Source files
+│   ├── Startup/              			# CubeMX Generated files
+│   └── User/                		    # CubeMX Generated files
 │
-├── Debug/                    # Compilation output
+├── Debug/                   		    # Compilation output
 │
 ├── Docs/
 │
 ├── Drivers/
-│   ├── BSP/                  # Board suport packages
-│   ├── CMSIS/                # arm's CMSIS library
-│   └── STM32N6xx_HAL_Driver/ # HAL Drivers
+│   ├── BSP/                  			# Board suport packages
+│   ├── CMSIS/                			# ARM's CMSIS library
+│   └── STM32N6xx_HAL_Driver/           # HAL Drivers
 │
-└── .ioc                    # CubeMX configuration file
+└── STM32N6_Audio_Direct_Streaming.ioc  # CubeMX configuration file
 ```
 
 CubeMX is generating the main.c file with initialization code in **application/User**. The only user implementation in this file is the call to `AudioMainInit()` and `AudioMain()`, respectively the user initialization and main loop. User files are in **application/Src** or **application/Inc**.
+
+### Deployment
+
+This project can be deployed with **STM32CubeIDE** or with the **boot from flash** procedure.
 
 ## STM32N6_Audio_Model_Zoo
 
 This project aims to reproduce and extend the **ST Model Zoo Speech Enhancement** application. It includes the X-Cube-AI firmware package, the CMSIS-DSP library and other middlewares coming from the original ST's GS_Audio_N6 project. 
 
-The project won't compile as its memory footprint seems to exceed the target device's available ROM. 
+This project is based on the STM32N6_Audio_Direct_Streaming project. It modifies it by adding multiple middlewares and the processing functions of the GS_Audio_N6 project.
 
-### Objectives
+![image](/images/Model_Zoo_buffer_architecture.png)
 
-- Reproduce the original Model Zoo Speech Enhancement demo  
-- Provide a clean and modular STM32CubeIDE project structure
+## STM32N6_Audio_Model_Zoo_Deployable
+
+Same code as the STM32N6_Audio_Model_Zoo project but the file tree matches the one expected by the python script from Model Zoo services. 
+
+This project is bugged :
+- When deployed with Model Zoo, the sound doesn't work
+- Deploying the project with STM32CubeIDE in debug mode works
 
 ## STM32N6 Double Project Template
 

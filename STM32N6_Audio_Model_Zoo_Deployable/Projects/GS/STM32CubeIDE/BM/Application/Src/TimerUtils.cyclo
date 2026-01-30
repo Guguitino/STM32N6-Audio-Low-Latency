@@ -1,0 +1,7 @@
+../Application/Src/TimerUtils.c:14:6:TimInit	2
+../Application/Src/TimerUtils.c:30:10:TimGetCycleCount	1
+../Application/Src/TimerUtils.c:35:9:TimMsToCycles	1
+../Application/Src/TimerUtils.c:49:6:ExecTimeMeasurementStart	1
+../Application/Src/TimerUtils.c:55:6:ExecTimeMeasurementStop	2
+../Application/Src/TimerUtils.c:67:6:NBDelayInit	2
+../Application/Src/TimerUtils.c:84:10:NBDelayHasRunOut	3

@@ -133,7 +133,7 @@ int main(void)
   MX_MDF1_Init();
   MX_TIM6_Init();
   MX_SAI1_Init();
-  MX_USART1_UART_Init();
+  //MX_USART1_UART_Init();
   SystemIsolation_Config();
   /* USER CODE BEGIN 2 */
   Playback_Init();

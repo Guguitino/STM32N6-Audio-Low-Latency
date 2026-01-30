@@ -1,0 +1,81 @@
+Application/Src/logging.o: ../Application/Src/logging.c \
+ /home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo/STM32CubeIDE/FSBL/Application/Inc/app_config.h \
+ /home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo/STM32CubeIDE/FSBL/Application/Inc/logging.h \
+ /home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo/STM32CubeIDE/FSBL/Application/Inc/app_msg.h \
+ /home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo/STM32CubeIDE/FSBL/Application/Inc/logging.h \
+ ../../../Drivers/CMSIS/Device/ST/STM32N6xx/Include/stm32n6xx.h \
+ ../../../Drivers/CMSIS/Device/ST/STM32N6xx/Include/stm32n657xx.h \
+ ../../../Drivers/CMSIS/Include/core_cm55.h \
+ ../../../Drivers/CMSIS/Include/cmsis_version.h \
+ ../../../Drivers/CMSIS/Include/cmsis_compiler.h \
+ ../../../Drivers/CMSIS/Include/cmsis_gcc.h \
+ ../../../Drivers/CMSIS/Include/mpu_armv8.h \
+ ../../../Drivers/CMSIS/Include/pmu_armv8.h \
+ ../../../Drivers/CMSIS/Include/cachel1_armv7.h \
+ ../../../Drivers/CMSIS/Device/ST/STM32N6xx/Include/system_stm32n6xx.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal.h \
+ ../../../FSBL/Inc/stm32n6xx_hal_conf.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_rcc.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_def.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_rcc.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_rcc_ex.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_gpio.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_gpio_ex.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_rif.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_dma.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_dma_ex.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_cortex.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_exti.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_i2c.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_i2c_ex.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_mdf.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_pwr.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_pwr_ex.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_sai.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_sai_ex.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_tim.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_tim_ex.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_uart.h \
+ ../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_uart_ex.h
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo/STM32CubeIDE/FSBL/Application/Inc/app_config.h:
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo/STM32CubeIDE/FSBL/Application/Inc/logging.h:
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo/STM32CubeIDE/FSBL/Application/Inc/app_msg.h:
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo/STM32CubeIDE/FSBL/Application/Inc/logging.h:
+../../../Drivers/CMSIS/Device/ST/STM32N6xx/Include/stm32n6xx.h:
+../../../Drivers/CMSIS/Device/ST/STM32N6xx/Include/stm32n657xx.h:
+../../../Drivers/CMSIS/Include/core_cm55.h:
+../../../Drivers/CMSIS/Include/cmsis_version.h:
+../../../Drivers/CMSIS/Include/cmsis_compiler.h:
+../../../Drivers/CMSIS/Include/cmsis_gcc.h:
+../../../Drivers/CMSIS/Include/mpu_armv8.h:
+../../../Drivers/CMSIS/Include/pmu_armv8.h:
+../../../Drivers/CMSIS/Include/cachel1_armv7.h:
+../../../Drivers/CMSIS/Device/ST/STM32N6xx/Include/system_stm32n6xx.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal.h:
+../../../FSBL/Inc/stm32n6xx_hal_conf.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_rcc.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_def.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_bus.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_ll_rcc.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_rcc_ex.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_gpio.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_gpio_ex.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_rif.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_dma.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_dma_ex.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_cortex.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_exti.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_i2c.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_i2c_ex.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_mdf.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_pwr.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_pwr_ex.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_sai.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_sai_ex.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_tim.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_tim_ex.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_uart.h:
+../../../Drivers/STM32N6xx_HAL_Driver/Inc/stm32n6xx_hal_uart_ex.h:

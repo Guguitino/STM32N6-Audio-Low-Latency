@@ -1,12 +1,12 @@
 # STM32N6-Audio-Low-Latency
 
-This project provides a real-time environment for audio processing on the STM32N6 Microcontroller. It is a development application to deploy AI models on the STM32N6570-DK board. 
+This project provides a real-time environment for audio processing on the STM32N6 Microcontroller. It is a development application to deploy AI audio processing models on the STM32N6570-DK board. 
 
 ## Development tools
 
 This application is tested on STM32N6570-DK.
 
-This project was developed using STM32CubeIDE and its integrated version of CubeMX to generate hardware configuration code. More information on the installation of this software can be found in the **docs** directory.
+This project was developed using STM32CubeIDE and STM32CubeMX to generate hardware configuration code. More information on the installation of this software can be found in the **docs** directory.
 
 ## Quick launch
 
@@ -17,8 +17,8 @@ This project was developed using STM32CubeIDE and its integrated version of Cube
     * Select a project root directory (e.g. `/STM32N6_Audio_Direct_Streaming`)
     * Make sure all projects are selected in the import preview
     * Click Finish
-- Connect the STM32N6570-DK board via USB
-- Select the FSBL IDE project in the file tree
+- Connect the STM32N6570-DK board via USB and switch in dev mode (BOOT1 = H)
+- Select the FSBL project in the file tree
 - Click **Run** or **Debug** to launch the project
 
 ## How to create a new STM32CubeIDE project

@@ -1,0 +1,10 @@
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/feature_extraction.c:41:6:buf_to_float	0	static
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/feature_extraction.c:56:6:buf_to_float_normed	0	static
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/feature_extraction.c:75:6:SpectrogramColumn	24	static
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/feature_extraction.c:112:6:SpectrogramOneColumn	24	static
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/feature_extraction.c:152:6:MelSpectrogramColumn	24	static
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/feature_extraction.c:171:6:LogMelSpectrogramColumn	40	static
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/feature_extraction.c:225:6:audio_is16of32_fft	24	static
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/feature_extraction.c:250:6:LogMelSpectrogramColumn_q15_Q8	88	static
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/feature_extraction.c:335:6:MfccColumn	16	static
+../Middlewares/ST/STM32_AI_AudioPreprocessing_Library/Src/feature_extraction.c:355:6:LogMelSpectrogramColumn_q15_os8_batch	24	static

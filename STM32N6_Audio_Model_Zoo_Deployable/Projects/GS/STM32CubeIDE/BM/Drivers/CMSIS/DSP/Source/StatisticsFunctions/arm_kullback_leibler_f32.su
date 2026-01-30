@@ -1,0 +1,3 @@
+../../../../Drivers/CMSIS/DSP/Include/arm_vec_math.h:79:25:vrecip_hiprec_f32	32	static
+../../../../Drivers/CMSIS/DSP/Include/arm_vec_math.h:160:25:vlogq_f32	80	static
+/home/adamg/STApps/GS_Audio_N6/STM32N6-Audio-Low-Latency2/STM32N6_Audio_Model_Zoo_Deployable/Projects/Drivers/CMSIS/DSP/Source/StatisticsFunctions/arm_kullback_leibler_f32.c:60:11:arm_kullback_leibler_f32	72	static

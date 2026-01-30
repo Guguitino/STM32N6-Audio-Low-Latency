@@ -1,0 +1,17 @@
+../Application/Src/AudioMain.c:256:13:IAC_Config	8	static
+../Application/Src/AudioMain.c:264:13:MPU_Config	40	static,ignoring_inline_asm
+../Application/Src/AudioMain.c:206:13:Int_Mem_Config	64	static
+../Application/Src/AudioMain.c:242:13:Ext_Mem_Config	16	static,ignoring_inline_asm
+../Application/Src/AudioMain.c:412:13:InitAudioCapture	8	static
+../Application/Src/AudioMain.c:424:13:InitAudioPlayback	8	static
+../Application/Src/AudioMain.c:304:13:WM8904_Probe	40	static
+../Application/Src/AudioMain.c:337:13:Playback_Init	32	static
+../Application/Src/AudioMain.c:168:13:AudioProcess	24	static
+../Application/Src/AudioMain.c:481:13:NPU_SettingsLog	56	static
+../Application/Src/AudioMain.c:367:6:HAL_MDF_AcqCpltCallback	8	static
+../Application/Src/AudioMain.c:381:6:HAL_MDF_AcqHalfCpltCallback	8	static
+../Application/Src/AudioMain.c:390:6:HAL_GPIO_EXTI_Falling_Callback	8	static
+../Application/Src/AudioMain.c:440:6:InitAudioProc	16	static
+../Application/Src/AudioMain.c:99:6:AudioMain	80	static
+../Application/Src/AudioMain.c:470:6:displaySystemSetting	16	static
+../Application/Src/AudioMain.c:78:6:AudioMainInit	8	static
